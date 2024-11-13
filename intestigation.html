@@ -11,7 +11,7 @@
 
 <meta name="author" content="by Kate Supremacy: Connor, Kate, Ruth, Torgua &amp; Kate" />
 
-<meta name="date" content="2024-11-12" />
+<meta name="date" content="2024-11-13" />
 
 <title>IDS intestigation worksheet</title>
 
@@ -353,7 +353,7 @@ display: none;
 <h1 class="title toc-ignore">IDS intestigation worksheet</h1>
 <h4 class="author">by Kate Supremacy: Connor, Kate, Ruth, Torgua &amp;
 Kate</h4>
-<h4 class="date">2024-11-12</h4>
+<h4 class="date">2024-11-13</h4>
 
 </div>
 
@@ -415,6 +415,40 @@ nyweather &lt;- read_csv(&quot;data/ny_weather.csv&quot;)</code></pre>
 
 
 View(nyweather)</code></pre>
+<pre class="r"><code># Which direction is the prevailing wind most frequently in? 
+nyweather %&gt;%
+  count(wind_main_dir) %&gt;%
+  arrange(desc(n)) </code></pre>
+<pre><code>## # A tibble: 7 × 2
+##   wind_main_dir     n
+##           &lt;dbl&gt; &lt;int&gt;
+## 1             8  3133
+## 2             5  2696
+## 3             6  1410
+## 4             2   614
+## 5             7   613
+## 6             1   291
+## 7             3     2</code></pre>
+<pre class="r"><code># Using the frequency table and the document in the reference tab of the Google doc, the prevailing wind most frequently in the North West direction.
+
+# Which direction is the secondary wind most frequently in?
+nyweather %&gt;%
+  count(wind_2nd_dir) %&gt;%
+  arrange(desc(n))</code></pre>
+<pre><code>## # A tibble: 8 × 2
+##   wind_2nd_dir     n
+##          &lt;dbl&gt; &lt;int&gt;
+## 1            7  2317
+## 2            8  1554
+## 3            6  1371
+## 4            1  1245
+## 5            5   794
+## 6            4   763
+## 7            2   676
+## 8            3    39</code></pre>
+<pre class="r"><code># Using the frequency table and the document in the reference tab of the Google doc, the secondary wind most frequently in the West direction.
+
+# Both the prevailing wind and the secondary winds least frequent direction is East.</code></pre>
 
 
 

@@ -64,5 +64,20 @@ nyweather <- nyweather %>%
 
 View(nyweather)
 ```
+```{r}
+# Which direction is the prevailing wind most frequently in? 
+nyweather %>%
+  count(wind_main_dir) %>%
+  arrange(desc(n)) 
+# Using the frequency table and the document in the reference tab of the Google doc, the prevailing wind most frequently in the North West direction.
 
+# Which direction is the secondary wind most frequently in?
+nyweather %>%
+  count(wind_2nd_dir) %>%
+  arrange(desc(n))
+# Using the frequency table and the document in the reference tab of the Google doc, the secondary wind most frequently in the West direction.
+
+# Both the prevailing wind and the secondary winds least frequent direction is East.
+
+```
 
