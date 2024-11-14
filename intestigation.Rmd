@@ -80,4 +80,60 @@ nyweather %>%
 # Both the prevailing wind and the secondary winds least frequent direction is East.
 
 ```
+```{r}
+#Creating a month variable so different weather features can be compared over the year
+nyweather_separate <- nyweather %>% 
+  separate(day, into = c("Month", "Day"), sep = "-") %>% 
+  mutate(
+    Month = as.numeric(Month),
+    Day = as.numeric(Day),
+    Name_Month = factor(month.abb[Month], levels = month.abb)
+  )
+```
 
+
+```{r}
+nyweather_monthly <- nyweather_separate %>% 
+  group_by(Name_Month) %>% 
+  summarize(monthly_temp_avg= mean(temp_avg),
+            monthly_dewp_avg= mean(dewp_avg),
+            monthly_wind_chill_avg = mean(wind_chill_avg),
+            monthly_wind_spd_avg = mean(wind_spd_avg))
+
+  
+nyweather_monthly %>% 
+ggplot(aes(x = Name_Month, y= monthly_temp_avg))+
+  geom_bar(stat = "identity") +
+  labs(title = "Average Temperature Per Month in New York",
+       x = "Month",
+       y= "Temperature in °F")
+
+# This shows what can be assumed, The summer months are hotter on average than the winter months
+
+nyweather_monthly %>% 
+ggplot(aes(x = Name_Month, y= monthly_wind_spd_avg))+
+  geom_bar(stat = "identity") +
+  labs(title = "Average Wind Speed Per Month in New York",
+       x = "Month",
+       y= "Wind Speed in Mph")
+#This shows that October to April is the windier period of the year, with the summer months having a smaller windspeed. I don't actually know if it's in Miles per Hour but id guess so
+
+nyweather_monthly %>% 
+ggplot(aes(x = Name_Month, y= monthly_dewp_avg))+
+  geom_bar(stat = "identity") +
+  labs(title = "Average Dew Point Per Month in New York",
+       x = "Month",
+       y= "Dew Point in °F")
+
+#The dew point follows a similar curve to that of temperature, suggesting a relationship between the two, from research the higher the dew point the more humid it feels, long periods of a high dew point implies prolonged humidity.
+
+nyweather_monthly %>% 
+ggplot(aes(x = Name_Month, y= monthly_wind_chill_avg))+
+  geom_bar(stat = "identity") +
+  labs(title = "Average Wind Chill Per Month in New York",
+       x = "Month",
+       y= "Wind Chill in °F")
+#This also follows a similiar curve as temperature, the wind chill is simply the temperature that the wind makes it, so for example in summer the wind chill is not going to be very active so the temperature is very close to the same as the inital recording but in the colder months the wind chill can make the temperature feel 10 degrees colder.
+
+#These last two will be particularly clear when compared directly with the temperature graph as a decent amount of analysis can be derived from the comparison. Such as a large gap between the temperature and the wind chill temperature implies periods of very cold winds.
+```
