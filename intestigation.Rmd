@@ -62,7 +62,7 @@ nyweather <- nyweather %>%
 #please also note that pressure will not change!! so is not worth looking at
 
 
-View(nyweather)
+
 ```
 ```{r}
 # Which direction is the prevailing wind most frequently in? 
