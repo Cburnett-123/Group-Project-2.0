@@ -137,3 +137,12 @@ ggplot(aes(x = Name_Month, y= monthly_wind_chill_avg))+
 
 #These last two will be particularly clear when compared directly with the temperature graph as a decent amount of analysis can be derived from the comparison. Such as a large gap between the temperature and the wind chill temperature implies periods of very cold winds.
 ```
+
+```{r}
+#Finding mean and median temperature in the year (converted to degrees Celsius)
+nyweather %>%
+  summarise(
+    mean_temp_year = (mean(temp_avg) - 32)/1.8,
+    median_temp_year = (median(temp_avg) - 32)/1.8
+  )
+```
