@@ -170,6 +170,41 @@ ggplot(data=nyweather,
   )
 #shows what the temperature feels like which is similar to the temperature average
 
+ggplot(data=nyweather,
+       mapping=aes(x=cloud_brkn_pct))+
+  geom_histogram(
+    binwidth=5
+  )
+#the percentage of the clouds that aremost common at 25%
+
+ggplot(data=nyweather,
+       mapping=aes(x=cloud_clr_pct))+
+  geom_histogram(
+    binwidth=5
+  )
+#the percentage of the sky that is clear average about 10%
+
+ggplot(data=nyweather,
+       mapping=aes(x=cloud_few_pct))+
+  geom_histogram(
+    binwidth=3
+  )
+#times where the sky was mostly clear which is mostly 15% of the time
+
+ggplot(data=nyweather,
+       mapping=aes(x=cloud_ovrcst_pct))+
+  geom_histogram(
+    binwidth=5
+  )
+#days where it was over cast which was averaging around 40%
+
+ggplot(data=nyweather,
+       mapping=aes(x=cloud_scat_pct))+
+  geom_histogram(
+    binwidth=4
+  )
+#On aberage there was 10% of the days had scattered clouds
+
 ```
 
 ```{r}
