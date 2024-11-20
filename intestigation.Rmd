@@ -61,8 +61,8 @@ nyweather <- nyweather %>%
   separate(date, into = c("day", "time"), sep = "T") # separated into day and time (might want to change variable types)
 #please also note that pressure will not change!! so is not worth looking at
 
-
-
+#removing nas
+nyweather[nyweather == -777.7] <- NA
 ```
 ```{r}
 # Which direction is the prevailing wind most frequently in? 

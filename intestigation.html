@@ -11,7 +11,7 @@
 
 <meta name="author" content="by Kate Supremacy: Connor, Kate, Ruth, Torgua &amp; Kate" />
 
-<meta name="date" content="2024-11-14" />
+<meta name="date" content="2024-11-20" />
 
 <title>IDS intestigation worksheet</title>
 
@@ -353,7 +353,7 @@ display: none;
 <h1 class="title toc-ignore">IDS intestigation worksheet</h1>
 <h4 class="author">by Kate Supremacy: Connor, Kate, Ruth, Torgua &amp;
 Kate</h4>
-<h4 class="date">2024-11-14</h4>
+<h4 class="date">2024-11-20</h4>
 
 </div>
 
@@ -413,8 +413,8 @@ nyweather &lt;- read_csv(&quot;data/ny_weather.csv&quot;)</code></pre>
   separate(date, into = c(&quot;day&quot;, &quot;time&quot;), sep = &quot;T&quot;) # separated into day and time (might want to change variable types)
 #please also note that pressure will not change!! so is not worth looking at
 
-
-View(nyweather)</code></pre>
+#removing nas
+nyweather[nyweather == -777.7] &lt;- NA</code></pre>
 <pre class="r"><code># Which direction is the prevailing wind most frequently in? 
 nyweather %&gt;%
   count(wind_main_dir) %&gt;%
@@ -502,6 +502,16 @@ ggplot(aes(x = Name_Month, y= monthly_wind_chill_avg))+
 <pre class="r"><code>#This also follows a similiar curve as temperature, the wind chill is simply the temperature that the wind makes it, so for example in summer the wind chill is not going to be very active so the temperature is very close to the same as the inital recording but in the colder months the wind chill can make the temperature feel 10 degrees colder.
 
 #These last two will be particularly clear when compared directly with the temperature graph as a decent amount of analysis can be derived from the comparison. Such as a large gap between the temperature and the wind chill temperature implies periods of very cold winds.</code></pre>
+<pre class="r"><code>#Finding mean and median temperature in the year (converted to degrees Celsius)
+nyweather %&gt;%
+  summarise(
+    mean_temp_year = (mean(temp_avg) - 32)/1.8,
+    median_temp_year = (median(temp_avg) - 32)/1.8
+  )</code></pre>
+<pre><code>## # A tibble: 1 × 2
+##   mean_temp_year median_temp_year
+##            &lt;dbl&gt;            &lt;dbl&gt;
+## 1           12.4             12.2</code></pre>
 
 
 
