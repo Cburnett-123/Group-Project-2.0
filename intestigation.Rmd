@@ -172,3 +172,18 @@ ggplot(data=nyweather,
 
 ```
 
+```{r}
+ggplot(nyweather, aes(x = cloud_scat_pct, y = dewp_avg)) + geom_point() + labs(title = "Dew Point Mean plotted against percentage of scattered clouds")
+
+#Mapping dew point average against the clouds scattered percentage, this graph shows there is little correlation until cloud scattered percentage reaches around 150, from which point it becomes clear that dew point average cannot be under a certain value for any given cloud scattered percentage value 
+
+ggplot(nyweather, aes(x = heat_index_avg, y = dewp_avg)) + geom_point() + labs(title = "Dew Point Mean plotted against heat index mean")
+
+#Mapping dew point average against the heat index mean, the graph shows a clear linear correlation of dew point average against heat index average 
+
+ggplot(nyweather, aes(x = wind_chill_avg, y = heat_index_avg)) + geom_point() + labs(title = "Heat index mean plotted against wind chill average")
+
+#Mapping heat index mean against wind chill avg weird ?
+
+ggplot(nyweather, aes(x = wind_spd_avg, y = dewp_avg)) + geom_point() + labs(title = "dew point average plotted against wind speed average")
+```
