@@ -146,3 +146,29 @@ nyweather %>%
     median_temp_year = (median(temp_avg) - 32)/1.8
   )
 ```
+
+```{r}
+ggplot(data=nyweather,
+       mapping=aes(
+         x= temp_avg))+
+  geom_histogram(
+    binwidth = 1
+  )
+#count of how may time each temperature is, shows what temperature is most common, which is around 25c and 70c with temperature in between being similar counts
+
+ggplot(data=nyweather,
+       mapping=aes( x=wind_spd_avg))+
+  geom_histogram(
+    binwidth = 0.2
+  )
+#shows the average wind speed, which is around 12-13, don't know units xx
+
+ggplot(data=nyweather,
+       mapping=aes(x=heat_index_avg))+
+  geom_histogram(
+    binwidth = 1
+  )
+#shows what the temperature feels like which is similar to the temperature average
+
+```
+
