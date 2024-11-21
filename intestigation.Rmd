@@ -45,7 +45,7 @@ nyweather <- nyweather %>%
     "pres_90pctl" = "HLY-PRES-90PCTL",
     "pres_avg" = `HLY-PRES-NORMAL`,
     "temp_10pctl" = "HLY-TEMP-10PCTL",
-    "temp_90ptcl" = "HLY-TEMP-90PCTL",
+    "temp_90pctl" = "HLY-TEMP-90PCTL",
     "temp_avg" = `HLY-TEMP-NORMAL`,
     "wind_chill_avg" = `HLY-WCHL-NORMAL`,
     "wind_main_dir" = "HLY-WIND-1STDIR",
@@ -63,7 +63,16 @@ nyweather <- nyweather %>%
 
 #replacing missing data with nas
 nyweather[nyweather == -777.7] <- NA
+
+#correcting percentage columns that are 10 times to big
+nyweather<- nyweather %>% 
+  mutate(across(c(cloud_brkn_pct,cloud_clr_pct,cloud_few_pct,cloud_ovrcst_pct,cloud_scat_pct, wind_main_pct,wind_2nd_pct), ~ .x/10))
+
+#changing temperature to degrees Celsius because Fahrenheit is completely meaningless to me
+nyweather<- nyweather %>% 
+  mutate(across(c(dewp_10,dewp_90,dewp_avg,heat_index_avg,temp_10pctl,temp_90pctl,temp_avg,wind_chill_avg), ~ signif((5/9)*(.x-32), 3)))
 ```
+
 ```{r}
 # Which direction is the prevailing wind most frequently in? 
 nyweather %>%
@@ -106,7 +115,7 @@ ggplot(aes(x = Name_Month, y= monthly_temp_avg))+
   geom_bar(stat = "identity") +
   labs(title = "Average Temperature Per Month in New York",
        x = "Month",
-       y= "Temperature in °F")
+       y= "Temperature in °C")
 
 # This shows what can be assumed, The summer months are hotter on average than the winter months
 
@@ -123,7 +132,7 @@ ggplot(aes(x = Name_Month, y= monthly_dewp_avg))+
   geom_bar(stat = "identity") +
   labs(title = "Average Dew Point Per Month in New York",
        x = "Month",
-       y= "Dew Point in °F")
+       y= "Dew Point in °C")
 
 #The dew point follows a similar curve to that of temperature, suggesting a relationship between the two, from research the higher the dew point the more humid it feels, long periods of a high dew point implies prolonged humidity.
 
@@ -132,8 +141,8 @@ ggplot(aes(x = Name_Month, y= monthly_wind_chill_avg))+
   geom_bar(stat = "identity") +
   labs(title = "Average Wind Chill Per Month in New York",
        x = "Month",
-       y= "Wind Chill in °F")
-#This also follows a similiar curve as temperature, the wind chill is simply the temperature that the wind makes it, so for example in summer the wind chill is not going to be very active so the temperature is very close to the same as the inital recording but in the colder months the wind chill can make the temperature feel 10 degrees colder.
+       y= "Wind Chill in °C")
+#This also follows a similar curve as temperature, the wind chill is simply the temperature that the wind makes it, so for example in summer the wind chill is not going to be very active so the temperature is very close to the same as the initial recording but in the colder months the wind chill can make the temperature feel 10 degrees colder.
 
 #These last two will be particularly clear when compared directly with the temperature graph as a decent amount of analysis can be derived from the comparison. Such as a large gap between the temperature and the wind chill temperature implies periods of very cold winds.
 ```
