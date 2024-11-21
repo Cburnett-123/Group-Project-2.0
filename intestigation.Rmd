@@ -148,11 +148,11 @@ ggplot(aes(x = Name_Month, y= monthly_wind_chill_avg))+
 ```
 
 ```{r}
-#Finding mean and median temperature in the year (converted to degrees Celsius)
+#Finding mean and median temperature in the year 
 nyweather %>%
   summarise(
-    mean_temp_year = (mean(temp_avg) - 32)/1.8,
-    median_temp_year = (median(temp_avg) - 32)/1.8
+    mean_temp_year = mean(temp_avg),
+    median_temp_year = median(temp_avg)
   )
 ```
 
