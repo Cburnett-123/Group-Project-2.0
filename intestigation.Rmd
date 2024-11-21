@@ -18,7 +18,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 # Add any other libraries here
 library(lubridate)
-
+library(tidymodels)
 
 ```
 
@@ -230,4 +230,66 @@ ggplot(nyweather, aes(x = wind_chill_avg, y = heat_index_avg)) + geom_point() + 
 #Mapping heat index mean against wind chill avg weird ?
 
 ggplot(nyweather, aes(x = wind_spd_avg, y = dewp_avg)) + geom_point() + labs(title = "dew point average plotted against wind speed average")
+```
+
+```{r}
+# Investigating how the average temperature effects the wind direction, more specifically the probability of it being in the west direction (including north west and south west).
+nyweather <- nyweather %>%
+  mutate(
+    wind_main_west = case_when(
+      wind_main_dir == "6" ~ "yes",
+      wind_main_dir == "7" ~ "yes",
+      wind_main_dir == "8" ~ "yes",
+      TRUE ~ "no"
+    ),
+    wind_main_west = fct_relevel(wind_main_west, "no", "yes")
+  ) # Creating a column for whether the wind is in the west direction or not.
+```
+
+```{r}
+set.seed(1234)
+nyweather_split <- initial_split(nyweather)
+nyweather_train <- training(nyweather_split)
+nyweather_test  <- testing(nyweather_split) # Splitting data into training and testing.
+
+wind_dir_rec_1 <- recipe(
+  wind_main_west ~ temp_avg,
+  data = nyweather_train  # Created a recipe.
+)
+
+wind_dir_mod_1 <- logistic_reg() %>%
+  set_engine("glm")     # Created a model.
+
+wind_dir_wflow_1 <- workflow() %>%
+  add_model(wind_dir_mod_1) %>%
+  add_recipe(wind_dir_rec_1) #Added them to a work flow.
+```
+
+```{r}
+wind_dir_fit_1 <- wind_dir_wflow_1 %>%
+  fit(data = nyweather_train)  # Applying work flow to training data.
+
+tidy(wind_dir_fit_1)  # You can see from the table below, that as the average temperature increases the smaller the logic of the probability, and therefore the smaller the probability that the wind will be in the west direction. Or in other words if it is colder it is more likely the wind will be going in the west direction (Including north west and south west direction).
+
+# The formula of the line is log(p/1-p) = 2.63 - 0.17 temp_avg, where p is the probability that the wind is in the west direction.
+```
+```{r}
+wind_dir_pred_1 <- predict(wind_dir_fit_1, nyweather_test, type = "prob") %>% 
+  bind_cols(nyweather_test) 
+wind_dir_pred_1 # Using fitted model to predict the testing data.
+
+wind_dir_pred_1 %>%
+  roc_curve(
+    truth = wind_main_west,
+    .pred_yes,             
+    event_level = "second"
+  ) %>%
+  autoplot() # Plotting a ROC curve
+
+wind_dir_pred_1 %>%
+  roc_auc(
+    truth = wind_main_west,
+    .pred_yes,             
+    event_level = "second"
+  ) # As seen below the ROC area is relatively close to one which is the ideal value. This means the model has fit the testing data quite well.
 ```
