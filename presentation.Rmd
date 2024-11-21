@@ -1,6 +1,6 @@
 ---
-title: "Presentation title"
-subtitle: "Presentation subtitle (if any)"
+title: "New York Weather Investigation"
+subtitle: "How does wind speed and chill affect the temperature index and cloud patterns respectively?"
 author: "Kate Supremacy <br> Connor, Kate, Ruth, Torgua and Kate"
 institute: "University of Edinburgh"
 date: "`r Sys.Date()`"
@@ -39,41 +39,112 @@ knitr::opts_chunk$set(fig.retina = 3, dpi = 300, fig.width = 6, fig.asp = 0.618,
 ```
 
 ```{r load-data, include=FALSE}
-# Load your data here
+nyweather <- read_csv("data/ny_weather.csv")
 
+nyweather <- nyweather %>%
+  rename(
+    "date" = `DATE`,
+    "cool_deg_hrs" = `HLY-CLDH-NORMAL`,
+    "cloud_brkn_pct" = `HLY-CLOD-PCTBKN`,
+    "cloud_clr_pct" = `HLY-CLOD-PCTCLR`,
+    "cloud_few_pct" = `HLY-CLOD-PCTFEW`,
+    "cloud_ovrcst_pct" = `HLY-CLOD-PCTOVC`,
+    "cloud_scat_pct" = `HLY-CLOD-PCTSCT`,
+    "dewp_10" = `HLY-DEWP-10PCTL`,
+    "dewp_90" = `HLY-DEWP-90PCTL`,
+    "dewp_avg" = `HLY-DEWP-NORMAL`,
+    "heat_index_avg" = `HLY-HIDX-NORMAL`,
+    "heat_deg_hrs" = `HLY-HTDH-NORMAL`,
+    "pres_10pctl" = "HLY-PRES-10PCTL",
+    "pres_90pctl" = "HLY-PRES-90PCTL",
+    "pres_avg" = `HLY-PRES-NORMAL`,
+    "temp_10pctl" = "HLY-TEMP-10PCTL",
+    "temp_90pctl" = "HLY-TEMP-90PCTL",
+    "temp_avg" = `HLY-TEMP-NORMAL`,
+    "wind_chill_avg" = `HLY-WCHL-NORMAL`,
+    "wind_main_dir" = "HLY-WIND-1STDIR",
+    "wind_main_pct" = "HLY-WIND-1STPCT",
+    "wind_2nd_dir" = "HLY-WIND-2NDDIR",
+    "wind_2nd_pct" = "HLY-WIND-2NDPCT",
+    "wind_spd_avg" = `HLY-WIND-AVGSPD`,
+    "pct_calm" = `HLY-WIND-PCTCLM`,
+    "wind_vector_dir" = `HLY-WIND-VCTDIR`,
+    "wind_vector_spd" = `HLY-WIND-VCTSPD`
+  ) %>% # renamed columns
+  select(-c("STATION", "NAME")) %>% # got rid of station and name as we know these
+  separate(date, into = c("day", "time"), sep = "T") # separated into day and time (might want to change variable types)
+#please also note that pressure will not change!! so is not worth looking at
+
+#replacing missing data with nas
+nyweather[nyweather == -777.7] <- NA
+
+#correcting percentage columns that are 10 times to big
+nyweather<- nyweather %>% 
+  mutate(across(c(cloud_brkn_pct,cloud_clr_pct,cloud_few_pct,cloud_ovrcst_pct,cloud_scat_pct, wind_main_pct,wind_2nd_pct), ~ .x/10))
+
+#changing temperature to degrees Celsius because Fahrenheit is completely meaningless to me
+nyweather<- nyweather %>% 
+  mutate(across(c(dewp_10,dewp_90,dewp_avg,heat_index_avg,temp_10pctl,temp_90pctl,temp_avg,wind_chill_avg), ~ signif((5/9)*(.x-32), 3)))
+
+nyweather_pres <- nyweather %>% 
+  select(-cool_deg_hrs,-pres_10pctl,-pres_90pctl,-pres_avg,-temp_10pctl,-temp_90pctl,-dewp_10,-dewp_90)
 ```
 
 ```{r include=FALSE}
 
 #Background image
 style_xaringan(
-  title_slide_background_image = "img/confetti.jpg"
+  title_slide_background_image = "img/new_york_city_night_cityscape.jpg"
 )
 ```
 
 class: center, middle
 
-## A statement of the overall goal / research question
+## How does wind speed and chill affect the temperature index and cloud patterns respectively?
 
 ---
 
 class: inverse, center, middle
 
-# Section title
+# Breakdown of the Dataset 
 
 ---
 
-# Hello World
+# Ny Weather
 
-- Click the `Knit` button to compile your presentation
+```{r data, include=TRUE, echo=FALSE}
+nyweather_pres %>% 
+  head()
+```
 
-- Make sure to commit and push all resulting files to your GitHub repo
+- These are just some of the variables in the data set, with the initial set containing 28 columns
+
+- Most of the variable names are fairly easy to pick up and some of the less obvious ones will be explained later
 
 ---
 
-class: inverse, middle, center
+class: center, middle
 
-# Using xaringan
+# The columns can be split into 4 key categories
+
+```{r, echo=FALSE}
+library(tibble)
+
+# Create the table
+categories <- data.frame(
+  "Cloud analysis" = c("cloud_brkn_pct, cloud_clr_pct, cloud_few_pct, cloud_ovrcst_pct, cloud_scat_pct"),
+  "Temperature analysis" = c("temp_avg, dewp_avg, heat_index_avg, wind_chill_avg"),
+  "Wind analysis" = c("wind_main_dir, wind_main_pct, wind_2nd_dir, wind_2nd_pct, wind_speed_avg, wind_vector_dir, wind_vector_spd"),
+  "Time periods" =c("day, time"))
+  
+
+
+# Display the table
+knitr::kable(categories, align = "c", col.names = c("Cloud Analysis", "Temperature Analysis", "Wind Analysis", "Time Periods"))
+```
+---
+# Histograms next idk? 
+
 
 ---
 

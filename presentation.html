@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="" xml:lang="">
   <head>
-    <title>Presentation title</title>
+    <title>New York Weather Investigation</title>
     <meta charset="utf-8" />
     <meta name="author" content="Kate Supremacy   Connor, Kate, Ruth, Torgua and Kate" />
-    <meta name="date" content="2024-11-11" />
+    <meta name="date" content="2024-11-21" />
     <script src="libs/header-attrs-2.28/header-attrs.js"></script>
     <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
   </head>
@@ -13,10 +13,10 @@
 class: center, middle, inverse, title-slide
 
 .title[
-# Presentation title
+# New York Weather Investigation
 ]
 .subtitle[
-## Presentation subtitle (if any)
+## How does wind speed and chill affect the temperature index and cloud patterns respectively?
 ]
 .author[
 ### Kate Supremacy <br> Connor, Kate, Ruth, Torgua and Kate
@@ -25,7 +25,7 @@ class: center, middle, inverse, title-slide
 ### University of Edinburgh
 ]
 .date[
-### 2024-11-11
+### 2024-11-21
 ]
 
 ---
@@ -44,27 +44,53 @@ class: center, middle, inverse, title-slide
 
 class: center, middle
 
-## A statement of the overall goal / research question
+## How does wind speed and chill affect the temperature index and cloud patterns respectively?
 
 ---
 
 class: inverse, center, middle
 
-# Section title
+# Breakdown of the Dataset 
 
 ---
 
-# Hello World
+# Ny Weather
 
-- Click the `Knit` button to compile your presentation
 
-- Make sure to commit and push all resulting files to your GitHub repo
+```
+## # A tibble: 6 × 20
+##   day   time     cloud_brkn_pct cloud_clr_pct cloud_few_pct cloud_ovrcst_pct
+##   &lt;chr&gt; &lt;chr&gt;             &lt;dbl&gt;         &lt;dbl&gt;         &lt;dbl&gt;            &lt;dbl&gt;
+## 1 01-01 01:00:00           11.6          24            11.9             44.5
+## 2 01-01 02:00:00           13.1          23.5          12.4             44.3
+## 3 01-01 03:00:00           14.3          24.2           9.5             45.5
+## 4 01-01 04:00:00           14.3          23.4          10.7             45.1
+## 5 01-01 05:00:00           14.2          19.9          13               45.5
+## 6 01-01 06:00:00           12.7          18.4          14.1             45.7
+## # ℹ 14 more variables: cloud_scat_pct &lt;dbl&gt;, dewp_avg &lt;dbl&gt;,
+## #   heat_index_avg &lt;dbl&gt;, heat_deg_hrs &lt;dbl&gt;, temp_avg &lt;dbl&gt;,
+## #   wind_chill_avg &lt;dbl&gt;, wind_main_dir &lt;dbl&gt;, wind_main_pct &lt;dbl&gt;,
+## #   wind_2nd_dir &lt;dbl&gt;, wind_2nd_pct &lt;dbl&gt;, wind_spd_avg &lt;dbl&gt;, pct_calm &lt;dbl&gt;,
+## #   wind_vector_dir &lt;dbl&gt;, wind_vector_spd &lt;dbl&gt;
+```
+
+- These are just some of the variables in the data set, with the initial set containing 28 columns
+
+- Most of the variable names are fairly easy to pick up and some of the less obvious ones will be explained later
 
 ---
 
-class: inverse, middle, center
+class: center, middle
 
-# Using xaringan
+# The columns can be split into 4 key categories
+
+
+|                                 Cloud Analysis                                 |                Temperature Analysis                |                                               Wind Analysis                                                | Time Periods |
+|:------------------------------------------------------------------------------:|:--------------------------------------------------:|:----------------------------------------------------------------------------------------------------------:|:------------:|
+| cloud_brkn_pct, cloud_clr_pct, cloud_few_pct, cloud_ovrcst_pct, cloud_scat_pct | temp_avg, dewp_avg, heat_index_avg, wind_chill_avg | wind_main_dir, wind_main_pct, wind_2nd_dir, wind_2nd_pct, wind_speed_avg, wind_vector_dir, wind_vector_spd |  day, time   |
+---
+# Histograms next idk? 
+
 
 ---
 
@@ -146,7 +172,7 @@ glance(model)
 - goes here
 ]
 .pull-right[
-&lt;img src="presentation_files/figure-html/unnamed-chunk-2-1.png" width="100%" /&gt;
+&lt;img src="presentation_files/figure-html/unnamed-chunk-3-1.png" width="100%" /&gt;
 ]
 
 ---
