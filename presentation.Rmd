@@ -1,6 +1,6 @@
 ---
 title: "New York Weather Investigation"
-subtitle: "How does wind speed and chill affect the temperature index and cloud patterns respectively?"
+subtitle: "Investigating the relationship between wind and other weather variables"
 author: "Kate Supremacy <br> Connor, Kate, Ruth, Torgua and Kate"
 institute: "University of Edinburgh"
 date: "`r Sys.Date()`"
@@ -100,7 +100,7 @@ style_xaringan(
 
 class: center, middle
 
-## How does wind speed and chill affect the temperature index and cloud patterns respectively?
+## Investigating the relationship between wind and other weather variables?
 
 ---
 

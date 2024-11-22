@@ -41,3 +41,11 @@ There will be two check-in points where you will have a discussion with a tutor 
 - item 1
 - item 2
 - etc.
+
+## Team Members
+
+- Connor Burnett S2699927 Cburnett-123
+- Kate Francis S2543380 Katef26
+- Ruth Watson S2626711 R-u-th
+- Kate Robinson S2640322 kateh-robinson
+- Torgua Lee Imnadze S2670456 torgua
