@@ -163,56 +163,56 @@ ggplot(data=nyweather,
   geom_histogram(
     binwidth = 0.7
   )
-#count of how may time each temperature is, shows what temperature is most common, which is around 25c and 70c with temperature in between being similar counts
+#count of how may time each temperature is, shows what temperature is most common, which is around 2c and ~22c with temperature in between being similar counts
 
 ggplot(data=nyweather,
        mapping=aes( x=wind_spd_avg))+
   geom_histogram(
     binwidth = 0.2
   )
-#shows the average wind speed, which is around 11-14, don't know units xx
+#shows the average wind speed, which is around 11-13, don't know units xx
 
 ggplot(data=nyweather,
        mapping=aes(x=heat_index_avg))+
   geom_histogram(
     binwidth = 1
   )
-#shows what the temperature feels like which is similar to the temperature average, just a bit lower, which means it feels colder to a person than what the actual temperature is
+#shows what the temperature feels like which is similar to the temperature average cause that whats causes it xx
 
 ggplot(data=nyweather,
        mapping=aes(x=wind_chill_avg))+
   geom_histogram(
     binwidth=1
   )
-#wimd chill average ia almost exactly the same as the heat index value shows correlation?
-
-ggplot(data=nyweather,
-       mapping=aes(x=wind_main_pct))+
-  geom_histogram(
-    binwidth=0.5
-  )
-#windy between 10 and 25% of the time
-
-ggplot(data=nyweather,
-       mapping=aes(x=wind_vector_dir))+
-  geom_histogram(
-    binwidth=3
-  )
-#Wind vector is around 300 which means it is coming from the Atlantic whihc means the wind will be colder as it is coming from the ocean not the land
-
-ggplot(data=nyweather,
-       mapping=aes(x=wind_vector_spd))+
-  geom_histogram(
-    binwidth=0.3
-  )
-#don't really know what this means
+#Wind chill average is a similar shape to temperature histogram but values are smaller as the wind is colder than the temperature 
 
 ggplot(data=nyweather,
        mapping=aes(x=wind_main_dir))+
   geom_histogram(
     binwidth=1
   )
-#main direction is 6-8 which means west
+#Pointing mostly to the west so colder x
+
+ggplot(data=nyweather,
+       mapping=aes(x=wind_main_pct))+
+  geom_histogram(
+    binwidth=3
+  )
+#Averages around 20%
+
+ggplot(data=nyweather,
+       mapping=aes(x=wind_vector_dir))+
+  geom_histogram(
+    binwidth=5
+  )
+#Vector averages 300 degrees which means the wind is mostly westerly and that explain wind chill as the wind is coming from over the Atlantic which is colder than land
+
+ggplot(data=nyweather,
+       mapping=aes(x=wind_vector_spd))+
+  geom_histogram(
+    binwidth=0.1
+  )
+#I actually have no clue whatb this means
 
 ```
 
