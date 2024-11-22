@@ -293,3 +293,32 @@ wind_dir_pred_1 %>%
     event_level = "second"
   ) # As seen below the ROC area is relatively close to one which is the ideal value. This means the model has fit the testing data quite well.
 ```
+
+```{r}
+# linear regression of wind chill against heat index
+set.seed(1234)
+nyweather_split2 <- initial_split(nyweather)
+nyweather_train2 <- training(nyweather_split2)
+nyweather_test2  <- testing(nyweather_split2)
+
+wind_heat_mod <- linear_reg() %>%
+  set_engine("lm")
+
+wind_heat_rec <- recipe(
+  wind_chill_avg ~ heat_index_avg,
+  data = nyweather_train2
+)
+
+wind_heat_wflow <- workflow() %>%
+  add_model(wind_heat_mod) %>%
+  add_recipe(wind_heat_rec)
+
+wind_heat_fit <- wind_heat_wflow %>%
+  fit(data = nyweather_train2)
+
+wind_heat_pred <- predict(wind_heat_fit, nyweather_test2) %>%
+  bind_cols(nyweather_test2 %>% select(wind_chill_avg, heat_index_avg))
+
+rsq(wind_heat_pred, truth = wind_chill_avg, estimate = .pred)
+rmse(wind_heat_pred, truth = wind_chill_avg, estimate = .pred)
+```
