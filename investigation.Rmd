@@ -322,3 +322,30 @@ wind_heat_pred <- predict(wind_heat_fit, nyweather_test2) %>%
 rsq(wind_heat_pred, truth = wind_chill_avg, estimate = .pred)
 rmse(wind_heat_pred, truth = wind_chill_avg, estimate = .pred)
 ```
+
+```{r}
+wind_heat_fit <- wind_heat_wflow %>%
+  fit(data = nyweather_train2)
+wind_heat_fit_tidy <- tidy(wind_heat_fit) 
+wind_heat_fit_aug  <- augment(wind_heat_fit, nyweather_train2) %>%
+  mutate(res_cat = ifelse(.resid > 0, TRUE, FALSE))
+wind_heat_fit_aug # Created an augmented table with the residuals.
+```
+
+```{r}
+ggplot(wind_heat_fit_aug, mapping = aes(x = .pred, y = .resid)) +
+  geom_point(alpha = 0.4) +
+  geom_hline(yintercept = 0, 
+             color = "blue", 
+             lty = "dashed") +
+  labs(title = "Residual Plot", 
+       x = "Predicted Wind Chill", 
+       y = "Residuals") 
+# Unfortunately there looks like there is another relationship going on.
+```
+
+
+
+
+
+
