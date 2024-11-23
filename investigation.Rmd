@@ -334,13 +334,13 @@ wind_heat_fit_aug # Created an augmented table with the residuals.
 
 ```{r}
 ggplot(wind_heat_fit_aug, mapping = aes(x = .pred, y = .resid)) +
-  geom_point(alpha = 0.4) +
+  geom_point(alpha = 0.4) + # Add points
   geom_hline(yintercept = 0, 
              color = "blue", 
-             lty = "dashed") +
+             lty = "dashed") + # Add zero line
   labs(title = "Residual Plot", 
        x = "Predicted Wind Chill", 
-       y = "Residuals") 
+       y = "Residuals")  # Added labels
 # Unfortunately there looks like there is another relationship going on.
 ```
 
