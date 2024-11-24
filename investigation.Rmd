@@ -343,9 +343,48 @@ ggplot(wind_heat_fit_aug, mapping = aes(x = .pred, y = .resid)) +
        y = "Residuals")  # Added labels
 # Unfortunately there looks like there is another relationship going on.
 ```
+```{r}
+wind_dir_rec_2 <- recipe(
+  wind_main_west ~ temp_avg + heat_index_avg + wind_chill_avg,
+  data = nyweather_train  # Created a recipe.
+)
+wind_dir_rec_2 <- wind_dir_rec_2 %>%
+  step_dummy(all_nominal(), -all_outcomes()) # Created dummy variables for all predictor variables and not of outcome variables.
 
+wind_dir_mod_2 <- logistic_reg() %>%
+  set_engine("glm")     # Created a model.
 
+wind_dir_wflow_2 <- workflow() %>%
+  add_model(wind_dir_mod_2) %>%
+  add_recipe(wind_dir_rec_2) #Added them to a work flow.
+```
 
+```{r}
+wind_dir_fit_2 <- wind_dir_wflow_2 %>%
+  fit(data = nyweather_train)  # Applying work flow to training data.
 
+tidy(wind_dir_fit_2)  # The interpretation is slightly more complex, interestingly by adding variables, on average the mean temperature has the opposite effect on the probability of the wind direction.
 
+# The formula of the line is log(p/1-p) = -5.26 + 7.77 temp_avg -5.57 heat_index_avg -1.95 wind_chill_avg, where p is the probability that the wind is in the west direction.
+```
 
+```{r}
+wind_dir_pred_2 <- predict(wind_dir_fit_2, nyweather_test, type = "prob") %>% 
+  bind_cols(nyweather_test) 
+wind_dir_pred_2 # Using fitted model to predict the testing data.
+
+wind_dir_pred_2 %>%
+  roc_curve(
+    truth = wind_main_west,
+    .pred_yes,             
+    event_level = "second"
+  ) %>%
+  autoplot() # Plotting a ROC curve
+
+wind_dir_pred_2 %>%
+  roc_auc(
+    truth = wind_main_west,
+    .pred_yes,             
+    event_level = "second"
+  ) # As seen below the ROC area is slightly closer to one than the previous model. This means the model has fit the testing data better.
+```
