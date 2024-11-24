@@ -273,6 +273,7 @@ tidy(wind_dir_fit_1)  # You can see from the table below, that as the average te
 
 # The formula of the line is log(p/1-p) = 2.63 - 0.17 temp_avg, where p is the probability that the wind is in the west direction.
 ```
+
 ```{r}
 wind_dir_pred_1 <- predict(wind_dir_fit_1, nyweather_test, type = "prob") %>% 
   bind_cols(nyweather_test) 
