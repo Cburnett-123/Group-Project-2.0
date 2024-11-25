@@ -219,17 +219,30 @@ ggplot(data=nyweather,
 ```{r}
 ggplot(nyweather, aes(x = cloud_scat_pct, y = dewp_avg)) + geom_point() + labs(title = "Dew Point Mean plotted against percentage of scattered clouds")
 
-#Mapping dew point average against the clouds scattered percentage, this graph shows there is little correlation until cloud scattered percentage reaches around 150, from which point it becomes clear that dew point average cannot be under a certain value for any given cloud scattered percentage value 
-
-ggplot(nyweather, aes(x = heat_index_avg, y = dewp_avg)) + geom_point() + labs(title = "Dew Point Mean plotted against heat index mean")
-
-#Mapping dew point average against the heat index mean, the graph shows a clear linear correlation of dew point average against heat index average 
+#Mapping dew point average against the clouds scattered percentage, this graph shows there is little correlation until cloud scattered percentage reaches around 150, from which point it becomes clear that dew point average cannot be under a certain value for any given cloud scattered percentage value - this was not really used further in the investigation
 
 ggplot(nyweather, aes(x = wind_chill_avg, y = heat_index_avg)) + geom_point() + labs(title = "Heat index mean plotted against wind chill average")
 
-#Mapping heat index mean against wind chill avg weird ?
+#Mapping heat index mean against wind chill average, this graph shows a very strong linear correlation between heat index mean and wind chill average. A large part of why this correlation exists is because heat index does not take into account the wind chill's affect on the perceived temperature, so to be more accurate this shows that a separate factor causing increased wind chill also increases heat index
 
-ggplot(nyweather, aes(x = wind_spd_avg, y = dewp_avg)) + geom_point() + labs(title = "dew point average plotted against wind speed average")
+ggplot(nyweather, aes(x = wind_spd_avg, y = heat_index_avg)) + geom_point() + labs(title = "Heat index mean plotted against wind speed average") 
+
+#When plotting wind speed average against heat index mean it becomes clear that wind speed is not the driving factor in increasing heat index mean
+
+ggplot(nyweather, aes(x = wind_spd_avg, y = wind_chill_avg)) + geom_point() + labs(title = "wind chill average plotted against wind speed average") 
+
+#this graph shows that surprisingly there is no strong correlation between wind chill and wind speed 
+
+ggplot(nyweather, aes(x = heat_index_avg, y = dewp_avg)) + geom_point() + labs(title = "Dew Point Mean plotted against heat index mean")
+
+#Mapping dew point average against the heat index mean, the graph shows a clear linear correlation of dew point average against heat index average
+
+ggplot(nyweather, aes(x = wind_chill_avg, y = dewp_avg)) + geom_point() + labs(title = "Dew Point Mean plotted against wind chill average")
+
+#mapping dew point to wind chill shows a strong linear correlation again, therefore we can assume that as dew point increases due to humidity, the effect of wind chill is felt more strongly due to more sweat and moisture being evaporated by the wind, however the increased humidity also increases the perceived temperature - this could be checked further if we had humidity data
+
+
+
 ```
 
 ```{r}
