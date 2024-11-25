@@ -31,6 +31,9 @@ library(tidymodels)
 library(palmerpenguins)
 library(knitr)
 library(xaringanthemer)
+library(xaringanExtra)
+library(patchwork)
+use_xaringan_extra("panelset")
 ```
 
 ```{r setup, include=FALSE}
@@ -40,6 +43,8 @@ knitr::opts_chunk$set(fig.retina = 3, dpi = 300, fig.width = 6, fig.asp = 0.618,
 
 ```{r load-data, include=FALSE}
 nyweather <- read_csv("data/ny_weather.csv")
+
+nyweather_unclean <- nyweather
 
 nyweather <- nyweather %>%
   rename(
@@ -77,14 +82,6 @@ nyweather <- nyweather %>%
 
 #replacing missing data with nas
 nyweather[nyweather == -777.7] <- NA
-
-#correcting percentage columns that are 10 times to big
-nyweather<- nyweather %>% 
-  mutate(across(c(cloud_brkn_pct,cloud_clr_pct,cloud_few_pct,cloud_ovrcst_pct,cloud_scat_pct, wind_main_pct,wind_2nd_pct), ~ .x/10))
-
-#changing temperature to degrees Celsius because Fahrenheit is completely meaningless to me
-nyweather<- nyweather %>% 
-  mutate(across(c(dewp_10,dewp_90,dewp_avg,heat_index_avg,temp_10pctl,temp_90pctl,temp_avg,wind_chill_avg), ~ signif((5/9)*(.x-32), 3)))
 
 nyweather_pres <- nyweather %>% 
   select(-cool_deg_hrs,-pres_10pctl,-pres_90pctl,-pres_avg,-temp_10pctl,-temp_90pctl,-dewp_10,-dewp_90)
@@ -143,12 +140,181 @@ categories <- data.frame(
 knitr::kable(categories, align = "c", col.names = c("Cloud Analysis", "Temperature Analysis", "Wind Analysis", "Time Periods"))
 ```
 ---
-# Histograms next idk? 
+# Cleaning The Data
+.panelset[
+.panel[.panel-name[Renaming Columns]
+The initial data set named variables using a different and confusing notation, to combat this we had to rename all but 1 of the 28 variables.
+```{r Rename}
+invisible({
+  nyweather_unclean %>%
+  rename(
+    "date" = "DATE",
+    "cool_deg_hrs" = "HLY-CLDH-NORMAL",
+    "cloud_brkn_pct" = "HLY-CLOD-PCTBKN",
+    "cloud_clr_pct" = "HLY-CLOD-PCTCLR",
+    "cloud_few_pct" = "HLY-CLOD-PCTFEW",
+    "cloud_ovrcst_pct" = "HLY-CLOD-PCTOVC",
+    "cloud_scat_pct" = "HLY-CLOD-PCTSCT") })
+```
+]
+.panel[.panel-name[Dealing with NA values]
 
+The NA values were also of a different format.
+```{r NA values}
+invisible({nyweather[nyweather == -777.7] <- NA})
+```
+
+[*]See Citations
+]
+.panel[.panel-name[Conversion of Temperature Units]
+As the measurements were made in New York all temperatures were measured in Fahrenheit
+```{r Temp Units}
+invisible({
+nyweather <- nyweather %>% 
+  mutate(across(c(dewp_10,dewp_90,dewp_avg,
+                  heat_index_avg,temp_10pctl,
+                  temp_90pctl,temp_avg,wind_chill_avg),
+                ~ signif((5/9)*(.x-32), 3)))})
+```
+]
+.panel[.panel-name[Percentage Correction]
+All the columns with percentage values were a factor of 10 larger than they should have been. 
+```{r Pct Correction}
+invisible({
+nyweather <- nyweather %>% 
+  mutate(across(c(cloud_brkn_pct,cloud_clr_pct,
+                  cloud_few_pct,cloud_ovrcst_pct,
+                  cloud_scat_pct, wind_main_pct,wind_2nd_pct),
+                ~ .x/10))})
+```
+]
+]
+---
+class: inverse, center, middle
+# Exploratory Data Analysis 
 
 ---
 
-# xaringan
+#Frequency Tables 
+
+What are the most frequent prevailing wind directions?
+.pull-left[
+Main Wind Direction
+```{r Freq Table 1, echo=FALSE}
+
+freq_table_1 <- nyweather %>%
+  count(wind_main_dir) %>%
+  arrange(desc(n)) 
+
+freq_table_1
+
+```
+]
+.pull-right[
+2nd Wind Direction
+```{r Freq Table 2, echo=FALSE}
+freq_table_2 <- nyweather %>%
+  count(wind_2nd_dir) %>%
+  arrange(desc(n))
+
+freq_table_2
+```
+]
+---
+#Histograms
+
+```{r Histos, echo=FALSE}
+#Temperature
+plot_1 <- ggplot(data=nyweather,
+       mapping=aes(
+         x= temp_avg))+
+  geom_histogram(
+    binwidth = 0.7
+  )
+#Wind speed avg
+plot_2 <- ggplot(data=nyweather,
+       mapping=aes( x=wind_spd_avg))+
+  geom_histogram(
+    binwidth = 0.2
+  )
+#Heat index
+plot_3 <- ggplot(data=nyweather,
+       mapping=aes(x=heat_index_avg))+
+  geom_histogram(
+    binwidth = 1
+  )
+#Wind Chill
+plot_4 <- ggplot(data=nyweather,
+       mapping=aes(x=wind_chill_avg))+
+  geom_histogram(
+    binwidth=1
+  )
+plot_5 <- ggplot(data=nyweather,
+       mapping=aes(x=wind_vector_dir))+
+  geom_histogram(
+    binwidth=3
+  )
+plot_6 <- ggplot(data=nyweather,
+       mapping=aes(x=wind_main_pct))+
+  geom_histogram(
+    binwidth=0.5
+  )
+plot_1 + plot_2 + plot_3 + plot_4 + plot_5 + plot_6
+```
+---
+# Bar Charts
+
+```{r Bars, echo=FALSE}
+nyweather_separate <- nyweather %>% 
+  separate(day, into = c("Month", "Day"), sep = "-") %>% 
+  mutate(
+    Month = as.numeric(Month),
+    Day = as.numeric(Day),
+    Name_Month = factor(month.abb[Month], levels = month.abb)
+  )
+
+nyweather_monthly <- nyweather_separate %>% 
+  group_by(Name_Month) %>% 
+  summarize(monthly_temp_avg= mean(temp_avg),
+            monthly_dewp_avg= mean(dewp_avg),
+            monthly_wind_chill_avg = mean(wind_chill_avg),
+            monthly_wind_spd_avg = mean(wind_spd_avg))
+
+bar_1 <- nyweather_monthly %>% 
+ggplot(aes(x = Name_Month, y= monthly_temp_avg))+
+  geom_bar(stat = "identity") +
+  labs(title = "Monthly Average Temperature",
+       x = "Month",
+       y= "Temperature in °C")+
+  theme(axis.text.x = element_text(angle = 45))
+
+bar_2 <- nyweather_monthly %>% 
+ggplot(aes(x = Name_Month, y= monthly_wind_spd_avg))+
+  geom_bar(stat = "identity") +
+  labs(title = "Monthly Average Wind Speed",
+       x = "Month",
+       y= "Wind Speed in Mph")+
+  theme(axis.text.x = element_text(angle = 45))
+
+bar_3 <- nyweather_monthly %>% 
+ggplot(aes(x = Name_Month, y= monthly_dewp_avg))+
+  geom_bar(stat = "identity") +
+  labs(title = "Monthly Average Dew Point",
+       x = "Month",
+       y= "Dew Point in °C")+
+  theme(axis.text.x = element_text(angle = 45))
+
+bar_4 <- nyweather_monthly %>% 
+ggplot(aes(x = Name_Month, y= monthly_wind_chill_avg))+
+  geom_bar(stat = "identity") +
+  labs(title = "Monthly Average Wind Chill",
+       x = "Month",
+       y= "Wind Chill in °C")+
+  theme(axis.text.x = element_text(angle = 45))
+
+bar_1 + bar_2 + bar_3 + bar_4
+```
+
 
 - The presentation is created using the `xaringan` package
 
