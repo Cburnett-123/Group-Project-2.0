@@ -97,7 +97,7 @@ style_xaringan(
 
 class: center, middle
 
-## Investigating the relationship between wind and other weather variables?
+## Investigating the relationship between wind and other weather variables
 
 ---
 
@@ -195,7 +195,7 @@ class: inverse, center, middle
 
 ---
 
-#Frequency Tables 
+###Frequency Tables 
 
 What are the most frequent prevailing wind directions?
 .pull-left[
@@ -221,8 +221,8 @@ freq_table_2
 ```
 ]
 ---
-#Histograms
-
+###Histograms
+Histograms were made of many variables including these key few that are reused in other data analysis
 ```{r Histos, echo=FALSE}
 #Temperature
 plot_1 <- ggplot(data=nyweather,
@@ -260,11 +260,14 @@ plot_6 <- ggplot(data=nyweather,
     binwidth=0.5
   )
 plot_1 + plot_2 + plot_3 + plot_4 + plot_5 + plot_6
-```
----
-# Bar Charts
 
-```{r Bars, echo=FALSE}
+```
+
+---
+### Bar Charts
+.panelset[
+.panel[.panel-name[Data set Prep]
+```{r Bar Code}
 nyweather_separate <- nyweather %>% 
   separate(day, into = c("Month", "Day"), sep = "-") %>% 
   mutate(
@@ -280,11 +283,16 @@ nyweather_monthly <- nyweather_separate %>%
             monthly_wind_chill_avg = mean(wind_chill_avg),
             monthly_wind_spd_avg = mean(wind_spd_avg))
 
+```
+]
+.panel[.panel-name[Charts]
+
+```{r Charts, echo=FALSE}
 bar_1 <- nyweather_monthly %>% 
 ggplot(aes(x = Name_Month, y= monthly_temp_avg))+
   geom_bar(stat = "identity") +
   labs(title = "Monthly Average Temperature",
-       x = "Month",
+       x="",
        y= "Temperature in °C")+
   theme(axis.text.x = element_text(angle = 45))
 
@@ -292,7 +300,7 @@ bar_2 <- nyweather_monthly %>%
 ggplot(aes(x = Name_Month, y= monthly_wind_spd_avg))+
   geom_bar(stat = "identity") +
   labs(title = "Monthly Average Wind Speed",
-       x = "Month",
+       x="",
        y= "Wind Speed in Mph")+
   theme(axis.text.x = element_text(angle = 45))
 
@@ -300,7 +308,7 @@ bar_3 <- nyweather_monthly %>%
 ggplot(aes(x = Name_Month, y= monthly_dewp_avg))+
   geom_bar(stat = "identity") +
   labs(title = "Monthly Average Dew Point",
-       x = "Month",
+       x="",
        y= "Dew Point in °C")+
   theme(axis.text.x = element_text(angle = 45))
 
@@ -308,13 +316,59 @@ bar_4 <- nyweather_monthly %>%
 ggplot(aes(x = Name_Month, y= monthly_wind_chill_avg))+
   geom_bar(stat = "identity") +
   labs(title = "Monthly Average Wind Chill",
-       x = "Month",
+       x="",
        y= "Wind Chill in °C")+
   theme(axis.text.x = element_text(angle = 45))
 
 bar_1 + bar_2 + bar_3 + bar_4
 ```
+]]
+---
+###Scatterplots
 
+In an attempt to find relationships between variables we made scatter plots.
+Examples:
+
+- Dew Point v Scattered Cloud Percentage
+
+- Heat Index v Wind Chill 
+
+- Dew Point v Wind Chill
+---
+class: center
+As you can see this shows very little correlation so this relationship was not investigated further
+```{r, echo=FALSE}
+ggplot(nyweather, aes(x = cloud_scat_pct, y = dewp_avg)) +
+  geom_point() +
+  labs(title = "Dew Point Avg v Scattered Cloud Percentage")
+
+```
+
+---
+class: center
+While this is not an exact linear model it is pretty close, enabling us to draw conclusions about the relationship between the chosen variables
+```{r, echo=FALSE}
+ggplot(nyweather, aes(x = wind_chill_avg, y = heat_index_avg)) +
+  geom_jitter() + 
+  labs(title = "Heat Index Avg V Wind Chill Avg")
+
+```
+---
+class: center
+Despite using geom_jitter to split up the plots, the sheer amount of inputs shows some kind of relationship between both but not with out variations.
+```{r, echo=FALSE}
+ggplot(nyweather, aes(x = wind_chill_avg, y = dewp_avg)) +
+  geom_jitter() +
+  labs(title = "Dew Point Avg v Wind Chill Avg")
+```
+
+---
+
+
+
+
+
+---
 
 - The presentation is created using the `xaringan` package
 

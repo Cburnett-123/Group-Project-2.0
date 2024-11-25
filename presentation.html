@@ -4,7 +4,7 @@
     <title>New York Weather Investigation</title>
     <meta charset="utf-8" />
     <meta name="author" content="Kate Supremacy   Connor, Kate, Ruth, Torgua and Kate" />
-    <meta name="date" content="2024-11-23" />
+    <meta name="date" content="2024-11-25" />
     <script src="libs/header-attrs-2.28/header-attrs.js"></script>
     <link href="libs/panelset-0.3.0/panelset.css" rel="stylesheet" />
     <script src="libs/panelset-0.3.0/panelset.js"></script>
@@ -27,7 +27,7 @@ class: center, middle, inverse, title-slide
 ### University of Edinburgh
 ]
 .date[
-### 2024-11-23
+### 2024-11-25
 ]
 
 ---
@@ -46,7 +46,7 @@ class: center, middle, inverse, title-slide
 
 class: center, middle
 
-## Investigating the relationship between wind and other weather variables?
+## Investigating the relationship between wind and other weather variables
 
 ---
 
@@ -150,7 +150,7 @@ class: inverse, center, middle
 
 ---
 
-#Frequency Tables 
+###Frequency Tables 
 
 What are the most frequent prevailing wind directions?
 .pull-left[
@@ -187,14 +187,68 @@ Main Wind Direction
 ```
 ]
 ---
-#Histograms
-
+###Histograms
+Histograms were made of many variables including these key few that are reused in other data analysis
 &lt;img src="presentation_files/figure-html/Histos-1.png" width="80%" /&gt;
+
 ---
-# Bar Charts
+### Bar Charts
+.panelset[
+.panel[.panel-name[Data set Prep]
 
-&lt;img src="presentation_files/figure-html/Bars-1.png" width="80%" /&gt;
+``` r
+nyweather_separate &lt;- nyweather %&gt;% 
+  separate(day, into = c("Month", "Day"), sep = "-") %&gt;% 
+  mutate(
+    Month = as.numeric(Month),
+    Day = as.numeric(Day),
+    Name_Month = factor(month.abb[Month], levels = month.abb)
+  )
 
+nyweather_monthly &lt;- nyweather_separate %&gt;% 
+  group_by(Name_Month) %&gt;% 
+  summarize(monthly_temp_avg= mean(temp_avg),
+            monthly_dewp_avg= mean(dewp_avg),
+            monthly_wind_chill_avg = mean(wind_chill_avg),
+            monthly_wind_spd_avg = mean(wind_spd_avg))
+```
+]
+.panel[.panel-name[Charts]
+
+&lt;img src="presentation_files/figure-html/Charts-1.png" width="80%" /&gt;
+]]
+---
+###Scatterplots
+
+In an attempt to find relationships between variables we made scatter plots.
+Examples:
+
+- Dew Point v Scattered Cloud Percentage
+
+- Heat Index v Wind Chill 
+
+- Dew Point v Wind Chill
+---
+class: center
+As you can see this shows very little correlation so this relationship was not investigated further
+&lt;img src="presentation_files/figure-html/unnamed-chunk-3-1.png" width="80%" /&gt;
+
+---
+class: center
+While this is not an exact linear model it is pretty close, enabling us to draw conclusions about the relationship between the chosen variables
+&lt;img src="presentation_files/figure-html/unnamed-chunk-4-1.png" width="80%" /&gt;
+---
+class: center
+Despite using geom_jitter to split up the plots, the sheer amount of inputs shows some kind of relationship between both but not with out variations.
+&lt;img src="presentation_files/figure-html/unnamed-chunk-5-1.png" width="80%" /&gt;
+
+---
+
+
+
+
+
+---
 
 - The presentation is created using the `xaringan` package
 
@@ -272,7 +326,7 @@ glance(model)
 - goes here
 ]
 .pull-right[
-&lt;img src="presentation_files/figure-html/unnamed-chunk-3-1.png" width="100%" /&gt;
+&lt;img src="presentation_files/figure-html/unnamed-chunk-6-1.png" width="100%" /&gt;
 ]
 
 ---
