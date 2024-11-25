@@ -273,6 +273,7 @@ tidy(wind_dir_fit_1)  # You can see from the table below, that as the average te
 
 # The formula of the line is log(p/1-p) = 2.63 - 0.17 temp_avg, where p is the probability that the wind is in the west direction.
 ```
+
 ```{r}
 wind_dir_pred_1 <- predict(wind_dir_fit_1, nyweather_test, type = "prob") %>% 
   bind_cols(nyweather_test) 
@@ -321,4 +322,70 @@ wind_heat_pred <- predict(wind_heat_fit, nyweather_test2) %>%
 
 rsq(wind_heat_pred, truth = wind_chill_avg, estimate = .pred)
 rmse(wind_heat_pred, truth = wind_chill_avg, estimate = .pred)
+```
+
+```{r}
+wind_heat_fit <- wind_heat_wflow %>%
+  fit(data = nyweather_train2)
+wind_heat_fit_tidy <- tidy(wind_heat_fit) 
+wind_heat_fit_aug  <- augment(wind_heat_fit, nyweather_train2) %>%
+  mutate(res_cat = ifelse(.resid > 0, TRUE, FALSE))
+wind_heat_fit_aug # Created an augmented table with the residuals.
+```
+
+```{r}
+ggplot(wind_heat_fit_aug, mapping = aes(x = .pred, y = .resid)) +
+  geom_point(alpha = 0.4) + # Add points
+  geom_hline(yintercept = 0, 
+             color = "blue", 
+             lty = "dashed") + # Add zero line
+  labs(title = "Residual Plot", 
+       x = "Predicted Wind Chill", 
+       y = "Residuals")  # Added labels
+# Unfortunately there looks like there is another relationship going on.
+```
+```{r}
+wind_dir_rec_2 <- recipe(
+  wind_main_west ~ temp_avg + heat_index_avg + wind_chill_avg,
+  data = nyweather_train  # Created a recipe.
+)
+wind_dir_rec_2 <- wind_dir_rec_2 %>%
+  step_dummy(all_nominal(), -all_outcomes()) # Created dummy variables for all predictor variables and not of outcome variables.
+
+wind_dir_mod_2 <- logistic_reg() %>%
+  set_engine("glm")     # Created a model.
+
+wind_dir_wflow_2 <- workflow() %>%
+  add_model(wind_dir_mod_2) %>%
+  add_recipe(wind_dir_rec_2) #Added them to a work flow.
+```
+
+```{r}
+wind_dir_fit_2 <- wind_dir_wflow_2 %>%
+  fit(data = nyweather_train)  # Applying work flow to training data.
+
+tidy(wind_dir_fit_2)  # The interpretation is slightly more complex, interestingly by adding variables, on average the mean temperature has the opposite effect on the probability of the wind direction.
+
+# The formula of the line is log(p/1-p) = -5.26 + 7.77 temp_avg -5.57 heat_index_avg -1.95 wind_chill_avg, where p is the probability that the wind is in the west direction.
+```
+
+```{r}
+wind_dir_pred_2 <- predict(wind_dir_fit_2, nyweather_test, type = "prob") %>% 
+  bind_cols(nyweather_test) 
+wind_dir_pred_2 # Using fitted model to predict the testing data.
+
+wind_dir_pred_2 %>%
+  roc_curve(
+    truth = wind_main_west,
+    .pred_yes,             
+    event_level = "second"
+  ) %>%
+  autoplot() # Plotting a ROC curve
+
+wind_dir_pred_2 %>%
+  roc_auc(
+    truth = wind_main_west,
+    .pred_yes,             
+    event_level = "second"
+  ) # As seen below the ROC area is slightly closer to one than the previous model. This means the model has fit the testing data better.
 ```
