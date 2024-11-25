@@ -4,8 +4,10 @@
     <title>New York Weather Investigation</title>
     <meta charset="utf-8" />
     <meta name="author" content="Kate Supremacy   Connor, Kate, Ruth, Torgua and Kate" />
-    <meta name="date" content="2024-11-22" />
+    <meta name="date" content="2024-11-23" />
     <script src="libs/header-attrs-2.28/header-attrs.js"></script>
+    <link href="libs/panelset-0.3.0/panelset.css" rel="stylesheet" />
+    <script src="libs/panelset-0.3.0/panelset.js"></script>
     <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
   </head>
   <body>
@@ -25,7 +27,7 @@ class: center, middle, inverse, title-slide
 ### University of Edinburgh
 ]
 .date[
-### 2024-11-22
+### 2024-11-23
 ]
 
 ---
@@ -61,12 +63,12 @@ class: inverse, center, middle
 ## # A tibble: 6 × 20
 ##   day   time     cloud_brkn_pct cloud_clr_pct cloud_few_pct cloud_ovrcst_pct
 ##   &lt;chr&gt; &lt;chr&gt;             &lt;dbl&gt;         &lt;dbl&gt;         &lt;dbl&gt;            &lt;dbl&gt;
-## 1 01-01 01:00:00           11.6          24            11.9             44.5
-## 2 01-01 02:00:00           13.1          23.5          12.4             44.3
-## 3 01-01 03:00:00           14.3          24.2           9.5             45.5
-## 4 01-01 04:00:00           14.3          23.4          10.7             45.1
-## 5 01-01 05:00:00           14.2          19.9          13               45.5
-## 6 01-01 06:00:00           12.7          18.4          14.1             45.7
+## 1 01-01 01:00:00            116           240           119              445
+## 2 01-01 02:00:00            131           235           124              443
+## 3 01-01 03:00:00            143           242            95              455
+## 4 01-01 04:00:00            143           234           107              451
+## 5 01-01 05:00:00            142           199           130              455
+## 6 01-01 06:00:00            127           184           141              457
 ## # ℹ 14 more variables: cloud_scat_pct &lt;dbl&gt;, dewp_avg &lt;dbl&gt;,
 ## #   heat_index_avg &lt;dbl&gt;, heat_deg_hrs &lt;dbl&gt;, temp_avg &lt;dbl&gt;,
 ## #   wind_chill_avg &lt;dbl&gt;, wind_main_dir &lt;dbl&gt;, wind_main_pct &lt;dbl&gt;,
@@ -89,12 +91,110 @@ class: center, middle
 |:------------------------------------------------------------------------------:|:--------------------------------------------------:|:----------------------------------------------------------------------------------------------------------:|:------------:|
 | cloud_brkn_pct, cloud_clr_pct, cloud_few_pct, cloud_ovrcst_pct, cloud_scat_pct | temp_avg, dewp_avg, heat_index_avg, wind_chill_avg | wind_main_dir, wind_main_pct, wind_2nd_dir, wind_2nd_pct, wind_speed_avg, wind_vector_dir, wind_vector_spd |  day, time   |
 ---
-# Histograms next idk? 
+# Cleaning The Data
+.panelset[
+.panel[.panel-name[Renaming Columns]
+The initial data set named variables using a different and confusing notation, to combat this we had to rename all but 1 of the 28 variables.
 
+``` r
+invisible({
+  nyweather_unclean %&gt;%
+  rename(
+    "date" = "DATE",
+    "cool_deg_hrs" = "HLY-CLDH-NORMAL",
+    "cloud_brkn_pct" = "HLY-CLOD-PCTBKN",
+    "cloud_clr_pct" = "HLY-CLOD-PCTCLR",
+    "cloud_few_pct" = "HLY-CLOD-PCTFEW",
+    "cloud_ovrcst_pct" = "HLY-CLOD-PCTOVC",
+    "cloud_scat_pct" = "HLY-CLOD-PCTSCT") })
+```
+]
+.panel[.panel-name[Dealing with NA values]
+
+The NA values were also of a different format.
+
+``` r
+invisible({nyweather[nyweather == -777.7] &lt;- NA})
+```
+
+[*]See Citations
+]
+.panel[.panel-name[Conversion of Temperature Units]
+As the measurements were made in New York all temperatures were measured in Fahrenheit
+
+``` r
+invisible({
+nyweather &lt;- nyweather %&gt;% 
+  mutate(across(c(dewp_10,dewp_90,dewp_avg,
+                  heat_index_avg,temp_10pctl,
+                  temp_90pctl,temp_avg,wind_chill_avg),
+                ~ signif((5/9)*(.x-32), 3)))})
+```
+]
+.panel[.panel-name[Percentage Correction]
+All the columns with percentage values were a factor of 10 larger than they should have been. 
+
+``` r
+invisible({
+nyweather &lt;- nyweather %&gt;% 
+  mutate(across(c(cloud_brkn_pct,cloud_clr_pct,
+                  cloud_few_pct,cloud_ovrcst_pct,
+                  cloud_scat_pct, wind_main_pct,wind_2nd_pct),
+                ~ .x/10))})
+```
+]
+]
+---
+class: inverse, center, middle
+# Exploratory Data Analysis 
 
 ---
 
-# xaringan
+#Frequency Tables 
+
+What are the most frequent prevailing wind directions?
+.pull-left[
+Main Wind Direction
+
+```
+## # A tibble: 7 × 2
+##   wind_main_dir     n
+##           &lt;dbl&gt; &lt;int&gt;
+## 1             8  3133
+## 2             5  2696
+## 3             6  1410
+## 4             2   614
+## 5             7   613
+## 6             1   291
+## 7             3     2
+```
+]
+.pull-right[
+2nd Wind Direction
+
+```
+## # A tibble: 8 × 2
+##   wind_2nd_dir     n
+##          &lt;dbl&gt; &lt;int&gt;
+## 1            7  2317
+## 2            8  1554
+## 3            6  1371
+## 4            1  1245
+## 5            5   794
+## 6            4   763
+## 7            2   676
+## 8            3    39
+```
+]
+---
+#Histograms
+
+&lt;img src="presentation_files/figure-html/Histos-1.png" width="80%" /&gt;
+---
+# Bar Charts
+
+&lt;img src="presentation_files/figure-html/Bars-1.png" width="80%" /&gt;
+
 
 - The presentation is created using the `xaringan` package
 
