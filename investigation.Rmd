@@ -345,6 +345,52 @@ ggplot(wind_heat_fit_aug, mapping = aes(x = .pred, y = .resid)) +
 # Unfortunately there looks like there is another relationship going on.
 ```
 ```{r}
+# linear regression of wind chill against heat index, average temperature, percentage of clouds overcast and the speed component of the wind vector
+set.seed(1234)
+nyweather_split2 <- initial_split(nyweather)
+nyweather_train2 <- training(nyweather_split2)
+nyweather_test2  <- testing(nyweather_split2)
+
+wind_heat_mod_2 <- linear_reg() %>%
+  set_engine("lm")
+
+wind_heat_rec_2 <- recipe(
+  wind_chill_avg ~ heat_index_avg + temp_avg + cloud_ovrcst_pct + wind_vector_spd,
+  data = nyweather_train2
+)
+
+wind_heat_wflow_2 <- workflow() %>%
+  add_model(wind_heat_mod_2) %>%
+  add_recipe(wind_heat_rec_2)
+
+wind_heat_fit_2 <- wind_heat_wflow_2 %>%
+  fit(data = nyweather_train2)
+
+wind_heat_pred_2 <- predict(wind_heat_fit_2, nyweather_test2) %>%
+  bind_cols(nyweather_test2 %>% select(wind_chill_avg, heat_index_avg))
+
+rsq(wind_heat_pred_2, truth = wind_chill_avg, estimate = .pred)
+rmse(wind_heat_pred_2, truth = wind_chill_avg, estimate = .pred)
+```
+```{r}
+wind_heat_fit_2 <- wind_heat_wflow_2 %>%
+  fit(data = nyweather_train2)
+wind_heat_fit_tidy_2 <- tidy(wind_heat_fit_2) 
+wind_heat_fit_aug_2  <- augment(wind_heat_fit_2, nyweather_train2) %>%
+  mutate(res_cat = ifelse(.resid > 0, TRUE, FALSE))
+wind_heat_fit_aug_2 # Created an augmented table with the residuals.
+
+ggplot(wind_heat_fit_aug_2, mapping = aes(x = .pred, y = .resid)) +
+  geom_point(alpha = 0.5) +
+  geom_hline(yintercept = 0, 
+             color = "blue", 
+             lty = "dashed") +
+  labs(title = "Residual Plot",
+       x = "Predicted Wind Chill", 
+       y = "Residuals") # Residual Plot, adding more variables hasn't helped the issue with the residuals.
+```
+
+```{r}
 wind_dir_rec_2 <- recipe(
   wind_main_west ~ temp_avg + heat_index_avg + wind_chill_avg,
   data = nyweather_train  # Created a recipe.
