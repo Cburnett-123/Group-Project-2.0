@@ -335,6 +335,12 @@ wind_heat_pred <- predict(wind_heat_fit, nyweather_test2) %>%
 
 rsq(wind_heat_pred, truth = wind_chill_avg, estimate = .pred)
 rmse(wind_heat_pred, truth = wind_chill_avg, estimate = .pred)
+
+nyweather_train2 %>%
+  summarise(min = min(wind_chill_avg), max = max(wind_chill_avg))
+
+# The root mean square is close to one meaning the model is good at predicting the data.
+# The root mean square error is a measure of the error in the model. The range of wind chill is 35.1 and the root mean square error is 0.79. Therefore the percentage error is approximately 2% which is quite small.
 ```
 
 ```{r}
@@ -370,7 +376,8 @@ wind_heat_mod_2 <- linear_reg() %>%
 wind_heat_rec_2 <- recipe(
   wind_chill_avg ~ heat_index_avg + temp_avg + cloud_ovrcst_pct + wind_vector_spd,
   data = nyweather_train2
-)
+) %>%
+  step_dummy(all_nominal(), -all_outcomes())
 
 wind_heat_wflow_2 <- workflow() %>%
   add_model(wind_heat_mod_2) %>%
@@ -404,6 +411,7 @@ ggplot(wind_heat_fit_aug_2, mapping = aes(x = .pred, y = .resid)) +
 ```
 
 ```{r}
+# Multivariate logistic regression model predicting wind direction by average temperature, heat index and wind chill.
 wind_dir_rec_2 <- recipe(
   wind_main_west ~ temp_avg + heat_index_avg + wind_chill_avg,
   data = nyweather_train  # Created a recipe.
