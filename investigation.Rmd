@@ -370,7 +370,8 @@ wind_heat_mod_2 <- linear_reg() %>%
 wind_heat_rec_2 <- recipe(
   wind_chill_avg ~ heat_index_avg + temp_avg + cloud_ovrcst_pct + wind_vector_spd,
   data = nyweather_train2
-)
+) %>%
+  step_dummy(all_nominal(), -all_outcomes())
 
 wind_heat_wflow_2 <- workflow() %>%
   add_model(wind_heat_mod_2) %>%
