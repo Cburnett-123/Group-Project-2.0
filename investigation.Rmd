@@ -335,6 +335,12 @@ wind_heat_pred <- predict(wind_heat_fit, nyweather_test2) %>%
 
 rsq(wind_heat_pred, truth = wind_chill_avg, estimate = .pred)
 rmse(wind_heat_pred, truth = wind_chill_avg, estimate = .pred)
+
+nyweather_train2 %>%
+  summarise(min = min(wind_chill_avg), max = max(wind_chill_avg))
+
+# The root mean square is close to one meaning the model is good at predicting the data.
+# The root mean square error is a measure of the error in the model. The range of wind chill is 35.1 and the root mean square error is 0.79. Therefore the percentage error is approximately 2% which is quite small.
 ```
 
 ```{r}
