@@ -4,7 +4,7 @@
     <title>New York Weather Investigation</title>
     <meta charset="utf-8" />
     <meta name="author" content="Kate Supremacy   Connor, Kate, Ruth, Torgua and Kate" />
-    <meta name="date" content="2024-11-25" />
+    <meta name="date" content="2024-11-26" />
     <script src="libs/header-attrs-2.28/header-attrs.js"></script>
     <link href="libs/panelset-0.3.0/panelset.css" rel="stylesheet" />
     <script src="libs/panelset-0.3.0/panelset.js"></script>
@@ -27,7 +27,7 @@ class: center, middle, inverse, title-slide
 ### University of Edinburgh
 ]
 .date[
-### 2024-11-25
+### 2024-11-26
 ]
 
 ---
@@ -97,7 +97,6 @@ class: center, middle
 The initial data set named variables using a different and confusing notation, to combat this we had to rename all but 1 of the 28 variables.
 
 ``` r
-invisible({
   nyweather_unclean %&gt;%
   rename(
     "date" = "DATE",
@@ -106,7 +105,7 @@ invisible({
     "cloud_clr_pct" = "HLY-CLOD-PCTCLR",
     "cloud_few_pct" = "HLY-CLOD-PCTFEW",
     "cloud_ovrcst_pct" = "HLY-CLOD-PCTOVC",
-    "cloud_scat_pct" = "HLY-CLOD-PCTSCT") })
+    "cloud_scat_pct" = "HLY-CLOD-PCTSCT")
 ```
 ]
 .panel[.panel-name[Dealing with NA values]
@@ -114,7 +113,7 @@ invisible({
 The NA values were also of a different format.
 
 ``` r
-invisible({nyweather[nyweather == -777.7] &lt;- NA})
+nyweather[nyweather == -777.7] &lt;- NA
 ```
 
 [*]See Citations
@@ -123,24 +122,22 @@ invisible({nyweather[nyweather == -777.7] &lt;- NA})
 As the measurements were made in New York all temperatures were measured in Fahrenheit
 
 ``` r
-invisible({
 nyweather &lt;- nyweather %&gt;% 
   mutate(across(c(dewp_10,dewp_90,dewp_avg,
                   heat_index_avg,temp_10pctl,
                   temp_90pctl,temp_avg,wind_chill_avg),
-                ~ signif((5/9)*(.x-32), 3)))})
+                ~ signif((5/9)*(.x-32), 3)))
 ```
 ]
 .panel[.panel-name[Percentage Correction]
 All the columns with percentage values were a factor of 10 larger than they should have been. 
 
 ``` r
-invisible({
 nyweather &lt;- nyweather %&gt;% 
   mutate(across(c(cloud_brkn_pct,cloud_clr_pct,
                   cloud_few_pct,cloud_ovrcst_pct,
                   cloud_scat_pct, wind_main_pct,wind_2nd_pct),
-                ~ .x/10))})
+                ~ .x/10))
 ```
 ]
 ]
@@ -243,203 +240,298 @@ Despite using geom_jitter to split up the plots, the sheer amount of inputs show
 &lt;img src="presentation_files/figure-html/unnamed-chunk-5-1.png" width="80%" /&gt;
 
 ---
-
-
-
-
-
+class: center, inverse, middle
+#Linear Regression Model
 ---
+#Heat Index and Wind Chill
+Given the apparent relationship shown by the scatter plot we investigated further.
+.panelset[.panel[.panel-name[Creating the Model]
 
-- The presentation is created using the `xaringan` package
+``` r
+set.seed(1234)
+nyweather_split2 &lt;- initial_split(nyweather)
+nyweather_train2 &lt;- training(nyweather_split2)
+nyweather_test2  &lt;- testing(nyweather_split2)
 
-- Use `---` to separate slides and `--` for incremental builds
+wind_heat_mod &lt;- linear_reg() %&gt;%
+  set_engine("lm")
 
---
+wind_heat_rec &lt;- recipe(
+  wind_chill_avg ~ heat_index_avg,
+  data = nyweather_train2)
 
-- Like this
+wind_heat_wflow &lt;- workflow() %&gt;%
+  add_model(wind_heat_mod) %&gt;%
+  add_recipe(wind_heat_rec)
 
----
-
-# Layouts
-
-You can use plain text
-
-- or bullet points
-
-.pull-left[
-or text in two columns `\(^*\)`
+wind_heat_fit &lt;- wind_heat_wflow %&gt;%
+  fit(data = nyweather_train2)
+```
 ]
-.pull-right[
-- like
-- this
-]
+.panel[.panel-name[Applying Test Data]
 
-.footnote[
-[*] And add footnotes
-]
-
----
-
-# Code
+``` r
+wind_heat_pred &lt;- predict(wind_heat_fit, nyweather_test2) %&gt;%
+  bind_cols(nyweather_test2 %&gt;% select(wind_chill_avg, heat_index_avg))
+```
 
 
 ``` r
-# a boring regression
-model &lt;- lm(dist ~ speed, data = cars)
-tidy(model)
+rsq(wind_heat_pred, truth = wind_chill_avg, estimate = .pred)
+```
+
+```
+## # A tibble: 1 × 3
+##   .metric .estimator .estimate
+##   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt;
+## 1 rsq     standard       0.994
+```
+
+``` r
+rmse(wind_heat_pred, truth = wind_chill_avg, estimate = .pred)
+```
+
+```
+## # A tibble: 1 × 3
+##   .metric .estimator .estimate
+##   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt;
+## 1 rmse    standard       0.793
+```
+]
+.panel[.panel-name[Analysing Outputs]
+
+.pull-left[
+-The R squared value being 0.994 implies the majority of the variation in points is explained by the variables chosen
+
+-But such a high R squared value can be a case of over fitting
+]
+.pull-right[
+-The Rmse value of 0.793 implies that the predictions made will be off by around 0.793 units
+
+-The value isn't very low so also implies average prediction accuracy
+]
+
+When these are both taken into account it appears that the model is successful, as it can predict fairly well and the variables explain most of the data.
+]
+.panel[.panel-name[Residual Plot]
+
+.pull-left[
+-Unfortunately when plotting the residuals there is a clear pattern in plots
+
+-This suggests that the actual relationship is nonlinear despite earlier impressions
+
+-Upon reflection a linear model was not a suitable choice as it fails to demonstrate the entirety of the relationship between the variables
+]
+.pull-right[
+&lt;img src="presentation_files/figure-html/unnamed-chunk-10-1.png" width="80%" /&gt;
+]]]
+---
+class: center, inverse, middle
+#Logistical Regression Model
+---
+#Predicting Wind Direction From Temperature
+
+.panelset[.panel[.panel-name[Preparing Data]
+
+``` r
+nyweather &lt;- nyweather %&gt;%
+  mutate(
+    wind_main_west = case_when(
+      wind_main_dir == "6" ~ "yes",
+      wind_main_dir == "7" ~ "yes",
+      wind_main_dir == "8" ~ "yes",
+      TRUE ~ "no"
+    ),
+    wind_main_west = fct_relevel(wind_main_west, "no", "yes")
+  )
+```
+Creating a binary variable is necessary for a logistical regression model hence we have made a variable that states if the wind is travelling west or not.
+]
+.panel[.panel-name[Creating the Model]
+
+``` r
+set.seed(1234)
+nyweather_split &lt;- initial_split(nyweather)
+nyweather_train &lt;- training(nyweather_split)
+nyweather_test  &lt;- testing(nyweather_split) # Splitting data into training and testing.
+
+wind_dir_rec_1 &lt;- recipe(
+  wind_main_west ~ temp_avg,
+  data = nyweather_train)  # Created a recipe.
+
+wind_dir_mod_1 &lt;- logistic_reg() %&gt;%
+  set_engine("glm")     # Created a model.
+
+wind_dir_wflow_1 &lt;- workflow() %&gt;%
+  add_model(wind_dir_mod_1) %&gt;%
+  add_recipe(wind_dir_rec_1) #Added them to a work flow.
+```
+]
+.panel[.panel-name[Equation of the Line]
+
+``` r
+wind_dir_fit_1 &lt;- wind_dir_wflow_1 %&gt;%
+  fit(data = nyweather_train)  # Applying work flow to training data.
+
+tidy(wind_dir_fit_1)
 ```
 
 ```
 ## # A tibble: 2 × 5
-##   term        estimate std.error statistic  p.value
-##   &lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
-## 1 (Intercept)   -17.6      6.76      -2.60 1.23e- 2
-## 2 speed           3.93     0.416      9.46 1.49e-12
+##   term        estimate std.error statistic p.value
+##   &lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;   &lt;dbl&gt;
+## 1 (Intercept)    2.63    0.0674       39.0       0
+## 2 temp_avg      -0.170   0.00424     -40.1       0
 ```
+You can see from the table below, that as the average temperature increases the smaller the logic of the probability, and therefore the smaller the probability that the wind will be in the west direction. Or in other words if it is colder it is more likely the wind will be going in the west direction (Including north west and south west direction).
+$$
+\log\left(\frac{p}{1-p}\right) = 2.63 - 0.17 \cdot \text{temp_avg}
+$$
+]
+.panel[.panel-name[ROC Curve]
 
-``` r
-glance(model)
-```
-
-```
-## # A tibble: 1 × 12
-##   r.squared adj.r.squared sigma statistic  p.value    df logLik   AIC   BIC
-##       &lt;dbl&gt;         &lt;dbl&gt; &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
-## 1     0.651         0.644  15.4      89.6 1.49e-12     1  -207.  419.  425.
-## # ℹ 3 more variables: deviance &lt;dbl&gt;, df.residual &lt;int&gt;, nobs &lt;int&gt;
-```
-
----
-
-# Plots
-
-
-
-&lt;img src="presentation_files/figure-html/plot-iris-1.png" width="80%" /&gt;
-
----
-
-## Plot and text
 
 .pull-left[
-- Some text
-- goes here
+
+``` r
+wind_dir_pred_1 %&gt;%
+  roc_curve(
+    truth = wind_main_west,
+    .pred_yes,             
+    event_level = "second") %&gt;%
+  autoplot() # Plotting a ROC curve
+```
+
+&lt;img src="presentation_files/figure-html/unnamed-chunk-15-1.png" width="80%" /&gt;
 ]
 .pull-right[
-&lt;img src="presentation_files/figure-html/unnamed-chunk-6-1.png" width="100%" /&gt;
+
+``` r
+wind_dir_pred_1 %&gt;%
+  roc_auc(
+    truth = wind_main_west,
+    .pred_yes,             
+    event_level = "second"
+  ) 
+```
+
+```
+## # A tibble: 1 × 3
+##   .metric .estimator .estimate
+##   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt;
+## 1 roc_auc binary         0.831
+```
+]]]
+---
+#Multivariate Prediction
+
+.panelset[.panel[.panel-name[Creating a New Model]
+
+``` r
+wind_dir_rec_2 &lt;- recipe(
+  wind_main_west ~ temp_avg + heat_index_avg + wind_chill_avg,
+  data = nyweather_train  # Created a recipe.
+)
+wind_dir_rec_2 &lt;- wind_dir_rec_2 %&gt;%
+  step_dummy(all_nominal(), -all_outcomes()) 
+# Created dummy variables for all predictor variables and not of outcome variables.
+
+wind_dir_mod_2 &lt;- logistic_reg() %&gt;%
+  set_engine("glm")     # Created a model.
+
+wind_dir_wflow_2 &lt;- workflow() %&gt;%
+  add_model(wind_dir_mod_2) %&gt;%
+  add_recipe(wind_dir_rec_2) #Added them to a work flow.
+```
 ]
+.panel[.panel-name[Equation of the Line]
 
----
+``` r
+wind_dir_fit_2 &lt;- wind_dir_wflow_2 %&gt;%
+  fit(data = nyweather_train)  # Applying work flow to training data.
 
-# Tables
-
-If you want to generate a table, make sure it is in the HTML format (instead of Markdown or other formats), e.g.,
-
-&lt;table&gt;
- &lt;thead&gt;
-  &lt;tr&gt;
-   &lt;th style="text-align:right;"&gt; Sepal.Length &lt;/th&gt;
-   &lt;th style="text-align:right;"&gt; Sepal.Width &lt;/th&gt;
-   &lt;th style="text-align:right;"&gt; Petal.Length &lt;/th&gt;
-   &lt;th style="text-align:right;"&gt; Petal.Width &lt;/th&gt;
-   &lt;th style="text-align:left;"&gt; Species &lt;/th&gt;
-  &lt;/tr&gt;
- &lt;/thead&gt;
-&lt;tbody&gt;
-  &lt;tr&gt;
-   &lt;td style="text-align:right;"&gt; 5.1 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 3.5 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 1.4 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 0.2 &lt;/td&gt;
-   &lt;td style="text-align:left;"&gt; setosa &lt;/td&gt;
-  &lt;/tr&gt;
-  &lt;tr&gt;
-   &lt;td style="text-align:right;"&gt; 4.9 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 3.0 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 1.4 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 0.2 &lt;/td&gt;
-   &lt;td style="text-align:left;"&gt; setosa &lt;/td&gt;
-  &lt;/tr&gt;
-  &lt;tr&gt;
-   &lt;td style="text-align:right;"&gt; 4.7 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 3.2 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 1.3 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 0.2 &lt;/td&gt;
-   &lt;td style="text-align:left;"&gt; setosa &lt;/td&gt;
-  &lt;/tr&gt;
-  &lt;tr&gt;
-   &lt;td style="text-align:right;"&gt; 4.6 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 3.1 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 1.5 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 0.2 &lt;/td&gt;
-   &lt;td style="text-align:left;"&gt; setosa &lt;/td&gt;
-  &lt;/tr&gt;
-  &lt;tr&gt;
-   &lt;td style="text-align:right;"&gt; 5.0 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 3.6 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 1.4 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 0.2 &lt;/td&gt;
-   &lt;td style="text-align:left;"&gt; setosa &lt;/td&gt;
-  &lt;/tr&gt;
-  &lt;tr&gt;
-   &lt;td style="text-align:right;"&gt; 5.4 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 3.9 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 1.7 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 0.4 &lt;/td&gt;
-   &lt;td style="text-align:left;"&gt; setosa &lt;/td&gt;
-  &lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-
----
-
-# Images
-
-&lt;div class="figure" style="text-align: center"&gt;
-&lt;img src="img/edinburgh-castle.jpg" alt="Image credit: Photo by Jörg Angeli on Unsplash." width="55%" /&gt;
-&lt;p class="caption"&gt;Image credit: Photo by Jörg Angeli on Unsplash.&lt;/p&gt;
-&lt;/div&gt;
-
-Or you can also include a full page image. See next slide.
-
----
-
-
-class: inverse, center, middle
-background-image: url(img/edinburgh-castle.jpg)
-background-size: contain
----
-
-# Math Expressions
-
-You can write LaTeX math expressions inside a pair of dollar signs, e.g. &amp;#36;\alpha+\beta$ renders `\(\alpha+\beta\)`. You can use the display style with double dollar signs:
-
-```
-$$\bar{X}=\frac{1}{n}\sum_{i=1}^nX_i$$
+tidy(wind_dir_fit_2) 
 ```
 
-`$$\bar{X}=\frac{1}{n}\sum_{i=1}^nX_i$$`
+```
+## # A tibble: 4 × 5
+##   term           estimate std.error statistic   p.value
+##   &lt;chr&gt;             &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;
+## 1 (Intercept)       -5.26    0.302      -17.5 3.42e- 68
+## 2 temp_avg           7.77    0.432       18.0 2.41e- 72
+## 3 heat_index_avg    -5.57    0.370      -15.0 4.57e- 51
+## 4 wind_chill_avg    -1.95    0.0760     -25.7 1.72e-145
+```
+The interpretation is slightly more complex, interestingly by adding variables, on average the mean temperature has the opposite effect on the probability of the wind direction.
+$$
+\log\left(\frac{p}{1-p}\right) = -5.26 + 7.77 \cdot \text{temp_avg} - 5.57 \cdot \text{heat_index_avg} - 1.95 \cdot \text{wind_chill_avg}
+$$
+]
+.panel[.panel-name[ROC Curve]
 
-Limitations:
+.pull-left[
 
-1. The source code of a LaTeX math expression must be in one line, unless it is inside a pair of double dollar signs, in which case the starting `$$` must appear in the very beginning of a line, followed immediately by a non-space character, and the ending `$$` must be at the end of a line, led by a non-space character;
+``` r
+wind_dir_pred_2 %&gt;%
+  roc_curve(
+    truth = wind_main_west,
+    .pred_yes,             
+    event_level = "second") %&gt;%
+  autoplot() # Plotting a ROC curve
+```
 
-1. There should not be spaces after the opening `$` or before the closing `$`.
+&lt;img src="presentation_files/figure-html/unnamed-chunk-20-1.png" width="80%" /&gt;
+]
+.pull-right[
 
-1. Math does not work on the title slide (see [#61](https://github.com/yihui/xaringan/issues/61) for a workaround).
+``` r
+wind_dir_pred_2 %&gt;%
+  roc_auc(
+    truth = wind_main_west,
+    .pred_yes,             
+    event_level = "second") 
+```
 
+```
+## # A tibble: 1 × 3
+##   .metric .estimator .estimate
+##   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt;
+## 1 roc_auc binary         0.847
+```
+]]]
 ---
+#Answering our question
+Investigating the relationships between wind and other weather variables has been a success as we have worked through key variables in the data set analysing as we went. Through this process we found variables that we could create models with and find relationships. We have established there is a clear relationship between westerly winds and cooler temperatures, upon further research this is due to winds coming from cold dry air the west. 
 
-# Feeling adventurous?
+Additionally while we did not find an appropriate model for the relationship between heat index and wind chill it was clear that a relationship did exist.
+---
+#Reflection
+.pull-left[
+What Went Well
 
-- Want to find out more about `xaringan`? See https://slides.yihui.name/xaringan/#1.
+- We made successful data visualisations while trying to keep the 4 respects in mind.
 
-- You are welcome to use the default styling of the slides. In fact, that's what I expect majority of you will do. You will differentiate yourself with the content of your presentation.
+- We worked well as a team, had an organised investigation document with comments to allow for pair programming techniques.
 
-- But some of you might want to play around with slide styling. The 
-`xaringanthemer` provides some solutions for this that: https://pkg.garrickadenbuie.com/xaringanthemer.
+- We used a google doc that detailed all meetings, tasks and plans which allowed us all to work productively and stay on task.
 
-- And if you want more bells and whistles, there is also `xaringanExtra`: https://pkg.garrickadenbuie.com/xaringanExtra.
+]
+.pull-right[
+Areas for Improvement
+
+- We could have attempted a further investigation into the cloud scatterings and how they change with wind direction or speed.
+
+- We could have tried cross validation as a way to verify our model
+
+- If we had imported another data set containing precipitation records
+]
+---
+#Citations
+- https://www.ncei.noaa.gov/cdo-web/datasets#NORMAL_HLY 
+- https://www.ncei.noaa.gov/pub/data/cdo/documentation/NORMAL_HLY_documentation.pdf 
+- https://www.ncei.noaa.gov/metadata/geoportal/rest/metadata/item/gov.noaa.ncdc:C00824/html 
+- https://www.google.com/url?sa=i&amp;url=https%3A%2F%2Fpix4free.org%2Fphoto%2F365%2Fnew-york-city-night-cityscape.html&amp;psig=AOvVaw2nNY_N4BvAAnPNvu7N7Pn5&amp;ust=1732313064955000&amp;source=images&amp;cd=vfe&amp;opi=89978449&amp;ved=0CBQQjRxqFwoTCLjf5Jq37okDFQAAAAAdAAAAABAI  (Accessed on the 22/11/24)
+- https://patchwork.data-imaginist.com/  
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
