@@ -1,5 +1,5 @@
 ---
-title: "IDS intestigation worksheet"
+title: "IDS investigation worksheet"
 author: "by Kate Supremacy: Connor, Kate, Ruth, Torgua & Kate"
 date: "`r Sys.Date()`"
 output: html_document
