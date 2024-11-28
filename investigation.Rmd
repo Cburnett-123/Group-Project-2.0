@@ -89,6 +89,7 @@ nyweather %>%
 # Both the prevailing wind and the secondary winds least frequent direction is East.
 
 ```
+
 ```{r}
 #Creating a month variable so different weather features can be compared over the year
 nyweather_separate <- nyweather %>% 
@@ -217,23 +218,38 @@ ggplot(data=nyweather,
 ```
 
 ```{r}
-ggplot(nyweather, aes(x = cloud_scat_pct, y = dewp_avg)) + geom_point() + labs(title = "Dew Point Mean plotted against percentage of scattered clouds")
+ggplot(nyweather, 
+       aes(x = cloud_scat_pct, y = dewp_avg))+ 
+  geom_point() + 
+  labs(title = "Dew Point Mean plotted against percentage of scattered clouds")
 
 #Mapping dew point average against the clouds scattered percentage, this graph shows there is little correlation until cloud scattered percentage reaches around 150, from which point it becomes clear that dew point average cannot be under a certain value for any given cloud scattered percentage value - this was not really used further in the investigation
 
-ggplot(nyweather, aes(x = wind_chill_avg, y = heat_index_avg)) + geom_point() + labs(title = "Heat index mean plotted against wind chill average")
+ggplot(nyweather, 
+       aes(x = wind_chill_avg, y = heat_index_avg)) + 
+  geom_point() + 
+  labs(title = "Heat index mean plotted against wind chill average")
 
 #Mapping heat index mean against wind chill average, this graph shows a very strong linear correlation between heat index mean and wind chill average. A large part of why this correlation exists is because heat index does not take into account the wind chill's affect on the perceived temperature, so to be more accurate this shows that a separate factor causing increased wind chill also increases heat index
 
-ggplot(nyweather, aes(x = wind_spd_avg, y = heat_index_avg)) + geom_point() + labs(title = "Heat index mean plotted against wind speed average") 
+ggplot(nyweather, 
+       aes(x = wind_spd_avg, y = heat_index_avg)) + 
+  geom_point() + 
+  labs(title = "Heat index mean plotted against wind speed average") 
 
 #When plotting wind speed average against heat index mean it becomes clear that wind speed is not the driving factor in increasing heat index mean
 
-ggplot(nyweather, aes(x = wind_spd_avg, y = wind_chill_avg)) + geom_point() + labs(title = "wind chill average plotted against wind speed average") 
+ggplot(nyweather, 
+       aes(x = wind_spd_avg, y = wind_chill_avg)) + 
+  geom_point() + 
+  labs(title = "wind chill average plotted against wind speed average") 
 
 #this graph shows that surprisingly there is no strong correlation between wind chill and wind speed 
 
-ggplot(nyweather, aes(x = heat_index_avg, y = dewp_avg)) + geom_point() + labs(title = "Dew Point Mean plotted against heat index mean")
+ggplot(nyweather, 
+       aes(x = heat_index_avg, y = dewp_avg)) + 
+  geom_point() + 
+  labs(title = "Dew Point Mean plotted against heat index mean")
 
 #Mapping dew point average against the heat index mean, the graph shows a clear linear correlation of dew point average against heat index average
 
@@ -307,6 +323,55 @@ wind_dir_pred_1 %>%
     event_level = "second"
   ) # As seen below the ROC area is relatively close to one which is the ideal value. This means the model has fit the testing data quite well.
 ```
+
+```{r}
+# Multivariate logistic regression model predicting wind direction by average temperature, heat index and wind chill.
+wind_dir_rec_2 <- recipe(
+  wind_main_west ~ temp_avg + heat_index_avg + wind_chill_avg,
+  data = nyweather_train  # Created a recipe.
+)
+wind_dir_rec_2 <- wind_dir_rec_2 %>%
+  step_dummy(all_nominal(), -all_outcomes()) # Created dummy variables for all predictor variables and not of outcome variables.
+
+wind_dir_mod_2 <- logistic_reg() %>%
+  set_engine("glm")     # Created a model.
+
+wind_dir_wflow_2 <- workflow() %>%
+  add_model(wind_dir_mod_2) %>%
+  add_recipe(wind_dir_rec_2) #Added them to a work flow.
+```
+
+```{r}
+wind_dir_fit_2 <- wind_dir_wflow_2 %>%
+  fit(data = nyweather_train)  # Applying work flow to training data.
+
+tidy(wind_dir_fit_2)  # The interpretation is slightly more complex, interestingly by adding variables, on average the mean temperature has the opposite effect on the probability of the wind direction.
+
+# The formula of the line is log(p/1-p) = -5.26 + 7.77 temp_avg -5.57 heat_index_avg -1.95 wind_chill_avg, where p is the probability that the wind is in the west direction.
+```
+
+```{r}
+wind_dir_pred_2 <- predict(wind_dir_fit_2, nyweather_test, type = "prob") %>% 
+  bind_cols(nyweather_test) 
+wind_dir_pred_2 # Using fitted model to predict the testing data.
+
+wind_dir_pred_2 %>%
+  roc_curve(
+    truth = wind_main_west,
+    .pred_yes,             
+    event_level = "second"
+  ) %>%
+  autoplot() # Plotting a ROC curve
+
+wind_dir_pred_2 %>%
+  roc_auc(
+    truth = wind_main_west,
+    .pred_yes,             
+    event_level = "second"
+  ) # As seen below the ROC area is slightly closer to one than the previous model. This means the model has fit the testing data better.
+```
+
+
 
 ```{r}
 # linear regression of wind chill against heat index
@@ -387,11 +452,17 @@ wind_heat_fit_2 <- wind_heat_wflow_2 %>%
   fit(data = nyweather_train2)
 
 wind_heat_pred_2 <- predict(wind_heat_fit_2, nyweather_test2) %>%
-  bind_cols(nyweather_test2 %>% select(wind_chill_avg, heat_index_avg))
+  bind_cols(nyweather_test2 %>% 
+              select(wind_chill_avg, 
+                     heat_index_avg, 
+                     temp_avg, 
+                     cloud_ovrcst_pct, 
+                     wind_vector_spd))
 
 rsq(wind_heat_pred_2, truth = wind_chill_avg, estimate = .pred)
 rmse(wind_heat_pred_2, truth = wind_chill_avg, estimate = .pred)
 ```
+
 ```{r}
 wind_heat_fit_2 <- wind_heat_wflow_2 %>%
   fit(data = nyweather_train2)
@@ -410,49 +481,8 @@ ggplot(wind_heat_fit_aug_2, mapping = aes(x = .pred, y = .resid)) +
        y = "Residuals") # Residual Plot, adding more variables hasn't helped the issue with the residuals.
 ```
 
-```{r}
-# Multivariate logistic regression model predicting wind direction by average temperature, heat index and wind chill.
-wind_dir_rec_2 <- recipe(
-  wind_main_west ~ temp_avg + heat_index_avg + wind_chill_avg,
-  data = nyweather_train  # Created a recipe.
-)
-wind_dir_rec_2 <- wind_dir_rec_2 %>%
-  step_dummy(all_nominal(), -all_outcomes()) # Created dummy variables for all predictor variables and not of outcome variables.
 
-wind_dir_mod_2 <- logistic_reg() %>%
-  set_engine("glm")     # Created a model.
 
-wind_dir_wflow_2 <- workflow() %>%
-  add_model(wind_dir_mod_2) %>%
-  add_recipe(wind_dir_rec_2) #Added them to a work flow.
-```
 
-```{r}
-wind_dir_fit_2 <- wind_dir_wflow_2 %>%
-  fit(data = nyweather_train)  # Applying work flow to training data.
 
-tidy(wind_dir_fit_2)  # The interpretation is slightly more complex, interestingly by adding variables, on average the mean temperature has the opposite effect on the probability of the wind direction.
 
-# The formula of the line is log(p/1-p) = -5.26 + 7.77 temp_avg -5.57 heat_index_avg -1.95 wind_chill_avg, where p is the probability that the wind is in the west direction.
-```
-
-```{r}
-wind_dir_pred_2 <- predict(wind_dir_fit_2, nyweather_test, type = "prob") %>% 
-  bind_cols(nyweather_test) 
-wind_dir_pred_2 # Using fitted model to predict the testing data.
-
-wind_dir_pred_2 %>%
-  roc_curve(
-    truth = wind_main_west,
-    .pred_yes,             
-    event_level = "second"
-  ) %>%
-  autoplot() # Plotting a ROC curve
-
-wind_dir_pred_2 %>%
-  roc_auc(
-    truth = wind_main_west,
-    .pred_yes,             
-    event_level = "second"
-  ) # As seen below the ROC area is slightly closer to one than the previous model. This means the model has fit the testing data better.
-```
