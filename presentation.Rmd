@@ -163,6 +163,7 @@ The NA values were also of a different format.
 nyweather[nyweather == -777.7] <- NA
 ```
 
+
 [*]See Citations
 ]
 .panel[.panel-name[Conversion of Temperature Units]
@@ -228,35 +229,25 @@ plot_1 <- ggplot(data=nyweather,
   geom_histogram(
     binwidth = 0.7
   )
-#Wind speed avg
-plot_2 <- ggplot(data=nyweather,
-       mapping=aes( x=wind_spd_avg))+
-  geom_histogram(
-    binwidth = 0.2
-  )
 #Heat index
-plot_3 <- ggplot(data=nyweather,
+plot_2 <- ggplot(data=nyweather,
        mapping=aes(x=heat_index_avg))+
   geom_histogram(
     binwidth = 1
   )
 #Wind Chill
-plot_4 <- ggplot(data=nyweather,
+plot_3 <- ggplot(data=nyweather,
        mapping=aes(x=wind_chill_avg))+
   geom_histogram(
     binwidth=1
   )
-plot_5 <- ggplot(data=nyweather,
+plot_4 <- ggplot(data=nyweather,
        mapping=aes(x=wind_vector_dir))+
   geom_histogram(
     binwidth=3
   )
-plot_6 <- ggplot(data=nyweather,
-       mapping=aes(x=wind_main_pct))+
-  geom_histogram(
-    binwidth=0.5
-  )
-plot_1 + plot_2 + plot_3 + plot_4 + plot_5 + plot_6
+
+  plot_1 + plot_2 + plot_3 + plot_4 
 
 ```
 
