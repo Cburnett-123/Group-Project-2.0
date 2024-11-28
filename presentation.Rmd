@@ -326,24 +326,15 @@ bar_1 + bar_2 + bar_3 + bar_4
 In an attempt to find relationships between variables we made scatter plots.
 Examples:
 
-- Dew Point v Scattered Cloud Percentage
-
 - Heat Index v Wind Chill 
 
+- Wind Speed v Wind Chill 
+
 - Dew Point v Wind Chill
+
+- Dew Point v Heat Index
 ---
 class: center
-As you can see this shows very little correlation so this relationship was not investigated further
-```{r, echo=FALSE}
-ggplot(nyweather, aes(x = cloud_scat_pct, y = dewp_avg)) +
-  geom_point() +
-  labs(title = "Dew Point Avg v Scattered Cloud Percentage")
-
-```
-
----
-class: center
-While this is not an exact linear model it is pretty close, enabling us to draw conclusions about the relationship between the chosen variables
 ```{r, echo=FALSE}
 ggplot(nyweather, aes(x = wind_chill_avg, y = heat_index_avg)) +
   geom_jitter() + 
@@ -352,13 +343,26 @@ ggplot(nyweather, aes(x = wind_chill_avg, y = heat_index_avg)) +
 ```
 ---
 class: center
-Despite using geom_jitter to split up the plots, the sheer amount of inputs shows some kind of relationship between both but not with out variations.
+```{r, echo=FALSE}
+ggplot(nyweather, aes(x = wind_spd_avg, y = wind_chill_avg)) +
+  geom_point() + 
+  labs(title = "Wind Chill Avg v Wind Speed Avg") 
+
+```
+---
+class: center
 ```{r, echo=FALSE}
 ggplot(nyweather, aes(x = wind_chill_avg, y = dewp_avg)) +
   geom_jitter() +
   labs(title = "Dew Point Avg v Wind Chill Avg")
 ```
-
+---
+class: center
+```{r, echo=FALSE}
+ggplot(nyweather, aes(x = heat_index_avg, y = dewp_avg)) +
+  geom_point() +
+  labs(title = "Dew Point Avg V Heat Index Avg")
+```
 ---
 class: center, inverse, middle
 #Linear Regression Model
@@ -385,8 +389,6 @@ wind_heat_wflow <- workflow() %>%
 
 wind_heat_fit <- wind_heat_wflow %>%
   fit(data = nyweather_train2)
-
-
 ```
 ]
 .panel[.panel-name[Applying Test Data]
@@ -581,10 +583,9 @@ wind_dir_pred_2 %>%
 ```
 ]]]
 ---
+class: center, middle, inverse
 #Answering our question
-Investigating the relationships between wind and other weather variables has been a success as we have worked through key variables in the data set analysing as we went. Through this process we found variables that we could create models with and find relationships. We have established there is a clear relationship between westerly winds and cooler temperatures, upon further research this is due to winds coming from cold dry air the west. 
 
-Additionally while we did not find an appropriate model for the relationship between heat index and wind chill it was clear that a relationship did exist.
 ---
 #Reflection
 .pull-left[
@@ -608,8 +609,8 @@ Areas for Improvement
 ]
 ---
 #Citations
-- https://www.ncei.noaa.gov/cdo-web/datasets#NORMAL_HLY 
-- https://www.ncei.noaa.gov/pub/data/cdo/documentation/NORMAL_HLY_documentation.pdf 
-- https://www.ncei.noaa.gov/metadata/geoportal/rest/metadata/item/gov.noaa.ncdc:C00824/html 
+- https://www.ncei.noaa.gov/cdo-web/datasets#NORMAL_HLY - Data set location
+- https://www.ncei.noaa.gov/pub/data/cdo/documentation/NORMAL_HLY_documentation.pdf - Data set documentation
+- https://www.ncei.noaa.gov/metadata/geoportal/rest/metadata/item/gov.noaa.ncdc:C00824/html - Data set descriptions
 - https://www.google.com/url?sa=i&url=https%3A%2F%2Fpix4free.org%2Fphoto%2F365%2Fnew-york-city-night-cityscape.html&psig=AOvVaw2nNY_N4BvAAnPNvu7N7Pn5&ust=1732313064955000&source=images&cd=vfe&opi=89978449&ved=0CBQQjRxqFwoTCLjf5Jq37okDFQAAAAAdAAAAABAI  (Accessed on the 22/11/24)
 - https://patchwork.data-imaginist.com/  

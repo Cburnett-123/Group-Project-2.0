@@ -220,25 +220,25 @@ nyweather_monthly &lt;- nyweather_separate %&gt;%
 In an attempt to find relationships between variables we made scatter plots.
 Examples:
 
-- Dew Point v Scattered Cloud Percentage
-
 - Heat Index v Wind Chill 
 
-- Dew Point v Wind Chill
----
-class: center
-As you can see this shows very little correlation so this relationship was not investigated further
-&lt;img src="presentation_files/figure-html/unnamed-chunk-3-1.png" width="80%" /&gt;
+- Wind Speed v Wind Chill 
 
+- Dew Point v Wind Chill
+
+- Dew Point v Heat Index
 ---
 class: center
-While this is not an exact linear model it is pretty close, enabling us to draw conclusions about the relationship between the chosen variables
+&lt;img src="presentation_files/figure-html/unnamed-chunk-3-1.png" width="80%" /&gt;
+---
+class: center
 &lt;img src="presentation_files/figure-html/unnamed-chunk-4-1.png" width="80%" /&gt;
 ---
 class: center
-Despite using geom_jitter to split up the plots, the sheer amount of inputs shows some kind of relationship between both but not with out variations.
 &lt;img src="presentation_files/figure-html/unnamed-chunk-5-1.png" width="80%" /&gt;
-
+---
+class: center
+&lt;img src="presentation_files/figure-html/unnamed-chunk-6-1.png" width="80%" /&gt;
 ---
 class: center, inverse, middle
 #Linear Regression Model
@@ -323,7 +323,7 @@ When these are both taken into account it appears that the model is successful, 
 -Upon reflection a linear model was not a suitable choice as it fails to demonstrate the entirety of the relationship between the variables
 ]
 .pull-right[
-&lt;img src="presentation_files/figure-html/unnamed-chunk-10-1.png" width="80%" /&gt;
+&lt;img src="presentation_files/figure-html/unnamed-chunk-11-1.png" width="80%" /&gt;
 ]]]
 ---
 class: center, inverse, middle
@@ -402,7 +402,7 @@ wind_dir_pred_1 %&gt;%
   autoplot() # Plotting a ROC curve
 ```
 
-&lt;img src="presentation_files/figure-html/unnamed-chunk-15-1.png" width="80%" /&gt;
+&lt;img src="presentation_files/figure-html/unnamed-chunk-16-1.png" width="80%" /&gt;
 ]
 .pull-right[
 
@@ -480,7 +480,7 @@ wind_dir_pred_2 %&gt;%
   autoplot() # Plotting a ROC curve
 ```
 
-&lt;img src="presentation_files/figure-html/unnamed-chunk-20-1.png" width="80%" /&gt;
+&lt;img src="presentation_files/figure-html/unnamed-chunk-21-1.png" width="80%" /&gt;
 ]
 .pull-right[
 
@@ -500,10 +500,9 @@ wind_dir_pred_2 %&gt;%
 ```
 ]]]
 ---
+class: center, middle, inverse
 #Answering our question
-Investigating the relationships between wind and other weather variables has been a success as we have worked through key variables in the data set analysing as we went. Through this process we found variables that we could create models with and find relationships. We have established there is a clear relationship between westerly winds and cooler temperatures, upon further research this is due to winds coming from cold dry air the west. 
 
-Additionally while we did not find an appropriate model for the relationship between heat index and wind chill it was clear that a relationship did exist.
 ---
 #Reflection
 .pull-left[
@@ -527,9 +526,9 @@ Areas for Improvement
 ]
 ---
 #Citations
-- https://www.ncei.noaa.gov/cdo-web/datasets#NORMAL_HLY 
-- https://www.ncei.noaa.gov/pub/data/cdo/documentation/NORMAL_HLY_documentation.pdf 
-- https://www.ncei.noaa.gov/metadata/geoportal/rest/metadata/item/gov.noaa.ncdc:C00824/html 
+- https://www.ncei.noaa.gov/cdo-web/datasets#NORMAL_HLY - Data set location
+- https://www.ncei.noaa.gov/pub/data/cdo/documentation/NORMAL_HLY_documentation.pdf - Data set documentation
+- https://www.ncei.noaa.gov/metadata/geoportal/rest/metadata/item/gov.noaa.ncdc:C00824/html - Data set descriptions
 - https://www.google.com/url?sa=i&amp;url=https%3A%2F%2Fpix4free.org%2Fphoto%2F365%2Fnew-york-city-night-cityscape.html&amp;psig=AOvVaw2nNY_N4BvAAnPNvu7N7Pn5&amp;ust=1732313064955000&amp;source=images&amp;cd=vfe&amp;opi=89978449&amp;ved=0CBQQjRxqFwoTCLjf5Jq37okDFQAAAAAdAAAAABAI  (Accessed on the 22/11/24)
 - https://patchwork.data-imaginist.com/  
     </textarea>
