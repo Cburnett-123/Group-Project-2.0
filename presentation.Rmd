@@ -609,8 +609,8 @@ Areas for Improvement
 ]
 ---
 #Citations
-- https://www.ncei.noaa.gov/cdo-web/datasets#NORMAL_HLY - Data set location
-- https://www.ncei.noaa.gov/pub/data/cdo/documentation/NORMAL_HLY_documentation.pdf - Data set documentation
-- https://www.ncei.noaa.gov/metadata/geoportal/rest/metadata/item/gov.noaa.ncdc:C00824/html - Data set descriptions
-- https://www.google.com/url?sa=i&url=https%3A%2F%2Fpix4free.org%2Fphoto%2F365%2Fnew-york-city-night-cityscape.html&psig=AOvVaw2nNY_N4BvAAnPNvu7N7Pn5&ust=1732313064955000&source=images&cd=vfe&opi=89978449&ved=0CBQQjRxqFwoTCLjf5Jq37okDFQAAAAAdAAAAABAI  (Accessed on the 22/11/24)
-- https://patchwork.data-imaginist.com/  
+- Arguez, A., Durre, I., Applequist, S., Squires, M., Vose, R., Yin, X. and Bilotta, R. (2010). NOAA's U.S. Climate Normals (1981-2010): JFK International Airport, NY US, 2010. Available at: https://www.ncei.noaa.gov/access/metadata/landing-page/bin/iso?id=gov.noaa.ncdc:C00824 (Accessed 11 November 2024).
+
+- Pedersen, T.L. (n.d.) 'patchwork'. Available at: https://patchwork.data-imaginist.com/ (Accessed 23 November 2024)
+
+- Pix4free (2016). Free New york city night cityscape Image. Available at: https://pix4free.org/assets/library/2021-01-12/originals/new_york_city_night_cityscape.jpg (Accessed 21 November 2024). 
