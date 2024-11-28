@@ -11,68 +11,223 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 ```{r load-lib, include = FALSE}
+# add libraries for visualisation and modelling
+
 library(tidyverse)
-# Add any other libraries here
-
-
+library(tidymodels)
 
 ```
 
 
 ```{r load-data, include=FALSE}
-# load your data here and any pre-processing/cleaning 
-#  that you need for your report.
+# import and clean data
 
+nyweather <- read_csv("data/ny_weather.csv")
 
+nyweather <- nyweather %>%
+  rename(
+    "date" = `DATE`,
+    "cool_deg_hrs" = `HLY-CLDH-NORMAL`,
+    "cloud_brkn_pct" = `HLY-CLOD-PCTBKN`,
+    "cloud_clr_pct" = `HLY-CLOD-PCTCLR`,
+    "cloud_few_pct" = `HLY-CLOD-PCTFEW`,
+    "cloud_ovrcst_pct" = `HLY-CLOD-PCTOVC`,
+    "cloud_scat_pct" = `HLY-CLOD-PCTSCT`,
+    "dewp_10" = `HLY-DEWP-10PCTL`,
+    "dewp_90" = `HLY-DEWP-90PCTL`,
+    "dewp_avg" = `HLY-DEWP-NORMAL`,
+    "heat_index_avg" = `HLY-HIDX-NORMAL`,
+    "heat_deg_hrs" = `HLY-HTDH-NORMAL`,
+    "pres_10pctl" = "HLY-PRES-10PCTL",
+    "pres_90pctl" = "HLY-PRES-90PCTL",
+    "pres_avg" = `HLY-PRES-NORMAL`,
+    "temp_10pctl" = "HLY-TEMP-10PCTL",
+    "temp_90pctl" = "HLY-TEMP-90PCTL",
+    "temp_avg" = `HLY-TEMP-NORMAL`,
+    "wind_chill_avg" = `HLY-WCHL-NORMAL`,
+    "wind_main_dir" = "HLY-WIND-1STDIR",
+    "wind_main_pct" = "HLY-WIND-1STPCT",
+    "wind_2nd_dir" = "HLY-WIND-2NDDIR",
+    "wind_2nd_pct" = "HLY-WIND-2NDPCT",
+    "wind_spd_avg" = `HLY-WIND-AVGSPD`,
+    "pct_calm" = `HLY-WIND-PCTCLM`,
+    "wind_vector_dir" = `HLY-WIND-VCTDIR`,
+    "wind_vector_spd" = `HLY-WIND-VCTSPD`
+  ) %>% # rename columns
+  select(-c("STATION", "NAME")) %>% # remove station and name
+  separate(date, into = c("day", "time"), sep = "T") # separate date into day and time columns
 
+nyweather[nyweather == -777.7] <- 0 # set values to 0 which would round to it
+
+nyweather<- nyweather %>% 
+  mutate(across(c(cloud_brkn_pct,cloud_clr_pct,cloud_few_pct,cloud_ovrcst_pct,cloud_scat_pct, wind_main_pct,wind_2nd_pct), ~ .x/10)) # divide percentages by 10
+
+nyweather<- nyweather %>% 
+  mutate(across(c(dewp_10,dewp_90,dewp_avg,heat_index_avg,temp_10pctl,temp_90pctl,temp_avg,wind_chill_avg), ~ signif((5/9)*(.x-32), 3))) # convert fahrenheit to celsius
 
 ```
 
 
 ## Research Question
 
-Describe your research question here. Include why this question might be of interest. 
-
-
-
-
+Our research question is: Investigating the relationship between wind and other weather variables. We chose this focus because during our exploratory data analysis we noticed strong patterns and correlation between the wind chill and direction with other variables such as heat index and temperature.
 
 ## Data
 
-Briefly describe your dataset here - include a description of the key variables you will be investigating. 
-Include a citation for your data. 
-See http://libraryguides.vu.edu.au/c.php?g=386501&p=4347840 for guidance on proper citation for datasets. 
-If you got your data off the web, make sure to state the retrieval date.
+Our dataset is from the National Centres for Environmental Information Climate Data, specifically the hourly normals for the city of New York in the year 2010, measured from JFK International Airport. These normals contain measurements of various meteorological parameters.
 
+We selected this dataset because it had a large number of variables for each observation, therefore there should be some interesting correlations. The dataset also contained both numerical and categorical data so we could carry out a range of analyses on it.
 
+The dataset came with documentation for all normals datasets, which explained the values in the dataset, special values and their meanings (which were necessary for cleaning) and how derived variables were calculated.
 
-
+Our key variables we investigated are: wind_main_dir, wind_main_pct, wind_2nd_dir, wind_vector_dir, wind_spd_avg, wind_chill_avg, temp_avg, heat_index_avg, dewp_avg, cloud_scat_pct.
 
 
 ## Findings
 
-The write-up of your project and findings go here. 
+### Methods
 
-Think of this as the text of your presentation with some extra detail to cover what there was not time to discuss in the presentation. This might include any assumptions you made when doing your analysis, any limitations of the work you have done or any ideas you have for future work. Feel free to split this section into subsections to make it easier to read. 
+To import and clean our data we used tidyverse/dplyr functions in order to read a csv file as a dataframe, rename and transform columns. We continued to use this tool set in our exploratory data analysis: creating frequency tables and making summaries of different groups of data. Particularly we used a range of ggplot graph types to create bar charts, histograms, and scatter graphs, along with appropriately labelling the graphs and axes so it was clear what was being communicated in the visualisation. When working with dates we used the lubridate package and its functions. Then we went on to create models using the tidymodels package: creating training and testing dataframes, creating recipes, specifying models and combining these to form workflows which we then fitted to the training data to make predictions for the testing data. Following the creation of our models we then analysed their performance. For our logistic models this was done by plotting ROC curves and calculating the area underneath them to assess the fit of the model on the testing data. For linear regressions we calculated R-squared and RMSE, along with creating residual plots, in order to see how effectively a linear model fit the data.
 
-The length should be roughly 1,500 words. 
-If you want to use a word count addin, you can install this by copying and pasting the following into RStudio:
+### Exploratory Data Analysis
 
-`devtools::install_github("benmarwick/wordcountaddin", type = "source", dependencies = TRUE)`
+We began by creating some frequency tables of our key variables to understand them better.
 
-You will then need to restart RStudio. Once you have done that, select the text you want to count the words of, go to Addins, and select the `Word count` addin.
-This addin counts words using two different algorithms, but the results should be similar and as long as you're in the ballpark of 1,500 words, you're good! 
-The addin will ignore code chunks and only count the words in prose. If you don't want to use the addin you can always copy and paste the text into Microsoft Word to do a Word Count!
+```{r}
+nyweather %>%
+  count(wind_main_dir) %>%
+  arrange(desc(n))
 
-You can also load your data here and present any analysis results / plots.
-Make sure to hide your code with  `echo = FALSE` unless the point you are trying to make is about the code itself, in which case you should show your code.
+nyweather %>%
+  count(wind_2nd_dir) %>%
+  arrange(desc(n))
+```
 
+We then created some histograms to get a sense of the spread of our data values.
 
+```{r}
+plot_1 <- ggplot(data=nyweather,
+       mapping=aes(
+         x= temp_avg))+
+  geom_histogram(
+    binwidth = 0.7
+  )
+plot_2 <- ggplot(data=nyweather,
+       mapping=aes( x=wind_spd_avg))+
+  geom_histogram(
+    binwidth = 0.2
+  )
+ggplot(data=nyweather,
+       mapping=aes(x=heat_index_avg))+
+  geom_histogram(
+    binwidth = 1
+  )
+#Wind Chill
+ggplot(data=nyweather,
+       mapping=aes(x=wind_chill_avg))+
+  geom_histogram(
+    binwidth=1
+  )
+ggplot(data=nyweather,
+       mapping=aes(x=wind_vector_dir))+
+  geom_histogram(
+    binwidth=3
+  )
+ggplot(data=nyweather,
+       mapping=aes(x=wind_main_pct))+
+  geom_histogram(
+    binwidth=0.5
+  )
+```
 
+We also created some bar charts to see how our key variables changed throughout the year.
 
+```{r}
+nyweather_separate <- nyweather %>% 
+  separate(day, into = c("Month", "Day"), sep = "-") %>% 
+  mutate(
+    Month = as.numeric(Month),
+    Day = as.numeric(Day),
+    Name_Month = factor(month.abb[Month], levels = month.abb)
+  )
+
+nyweather_monthly <- nyweather_separate %>% 
+  group_by(Name_Month) %>% 
+  summarize(monthly_temp_avg= mean(temp_avg),
+            monthly_dewp_avg= mean(dewp_avg),
+            monthly_wind_chill_avg = mean(wind_chill_avg),
+            monthly_wind_spd_avg = mean(wind_spd_avg))
+
+nyweather_monthly %>% 
+ggplot(aes(x = Name_Month, y= monthly_temp_avg))+
+  geom_bar(stat = "identity") +
+  labs(title = "Monthly Average Temperature",
+       x="",
+       y= "Temperature in °C")+
+  theme(axis.text.x = element_text(angle = 45))
+
+nyweather_monthly %>% 
+ggplot(aes(x = Name_Month, y= monthly_wind_spd_avg))+
+  geom_bar(stat = "identity") +
+  labs(title = "Monthly Average Wind Speed",
+       x="",
+       y= "Wind Speed in Mph")+
+  theme(axis.text.x = element_text(angle = 45))
+
+nyweather_monthly %>% 
+ggplot(aes(x = Name_Month, y= monthly_dewp_avg))+
+  geom_bar(stat = "identity") +
+  labs(title = "Monthly Average Dew Point",
+       x="",
+       y= "Dew Point in °C")+
+  theme(axis.text.x = element_text(angle = 45))
+
+nyweather_monthly %>% 
+ggplot(aes(x = Name_Month, y= monthly_wind_chill_avg))+
+  geom_bar(stat = "identity") +
+  labs(title = "Monthly Average Wind Chill",
+       x="",
+       y= "Wind Chill in °C")+
+  theme(axis.text.x = element_text(angle = 45))
+```
+
+Finally we made some scatterplots to assess correlation between certain variables before constructing our models.
+
+```{r}
+ggplot(nyweather, aes(x = cloud_scat_pct, y = dewp_avg)) +
+  geom_point() +
+  labs(title = "Dew Point Avg v Scattered Cloud Percentage")
+
+ggplot(nyweather, aes(x = wind_chill_avg, y = heat_index_avg)) +
+  geom_jitter() + 
+  labs(title = "Heat Index Avg V Wind Chill Avg")
+
+ggplot(nyweather, aes(x = wind_chill_avg, y = dewp_avg)) +
+  geom_jitter() +
+  labs(title = "Dew Point Avg v Wind Chill Avg")
+
+```
+
+### Linear regression
+```{r}
+
+```
+### Logistic regression
+```{r}
+
+```
+### Answering our question
+
+### Advantages and limitations
 
 ## References
 
 List any references here. You should, at a minimum, list your data source.
 
+
+Arguez, A., Durre, I., Applequist, S., Squires, M., Vose, R., Yin, X. and Bilotta, R. (2010). NOAA's U.S. Climate Normals (1981-2010): JFK International Airport, NY US, 2010. Available at: 10.7289/V5PN93JP (Accessed 11 November 2024).
+
+Pix4free (2016). Free New york city night cityscape Image. Available at: https://pix4free.org/assets/library/2021-01-12/originals/new_york_city_night_cityscape.jpg (Accessed 21 November 2024).
+
+Pedersen, T.L. (n.d.) 'patchwork'. Available at: https://patchwork.data-imaginist.com/ (Accessed 23 November 2024)
 
