@@ -78,20 +78,29 @@ Our research question is: Investigating the relationship between wind and other 
 
 ## Data
 
-Our dataset is from the National Centres for Environmental Information Climate Data, specifically the hourly normals for the city of New York in the year 2010, measured from JFK International Airport. These normals contain measurements of various meteorological parameters.
+Our dataset is from the National Centres for Environmental Information Climate Data, specifically the hourly normals for the city of New York in the year 2010, measured from JFK International Airport. These normals contain measurements of various meteorological parameters.  
 
-We selected this dataset because it had a large number of variables for each observation, therefore there should be some interesting correlations. The dataset also contained both numerical and categorical data so we could carry out a range of analyses on it.
+We selected this dataset because it had a large number of variables for each observation, therefore there should be some interesting correlations. The dataset also contained both numerical and categorical data so we could carry out a range of analyses on it.  
 
-The dataset came with documentation for all normals datasets, which explained the values in the dataset, special values and their meanings (which were necessary for cleaning) and how derived variables were calculated.
+The dataset came with documentation for all normals datasets, which explained the values in the dataset, special values and their meanings and how derived variables were calculated.  
 
-Our key variables we investigated are: wind_main_dir, wind_main_pct, wind_2nd_dir, wind_vector_dir, wind_spd_avg, wind_chill_avg, temp_avg, heat_index_avg, dewp_avg, cloud_scat_pct.
+Explaining our variables:
+- The cloud analysis variables describe the percentage of different types of cloud coverage.
+- For temperature variables, the dew point represents the moisture/humidity of the air, the heat index indicates how hot it feels to a human observer, and wind chill is the effect the wind has on temperature, temperature is self explanatory.
+- Wind variables are separated into first and second winds, then into wind speed and direction.
+- Time variables state the date and time of each observation.
 
 
 ## Findings
 
 ### Methods
 
-To import and clean our data we used tidyverse/dplyr functions in order to read a csv file as a dataframe, rename and transform columns. We continued to use this tool set in our exploratory data analysis: creating frequency tables and making summaries of different groups of data. Particularly we used a range of ggplot graph types to create bar charts, histograms, and scatter graphs, along with appropriately labelling the graphs and axes so it was clear what was being communicated in the visualisation. When working with dates we used the lubridate package and its functions. Then we went on to create models using the tidymodels package: creating training and testing dataframes, creating recipes, specifying models and combining these to form workflows which we then fitted to the training data to make predictions for the testing data. Following the creation of our models we then analysed their performance. For our logistic models this was done by plotting ROC curves and calculating the area underneath them to assess the fit of the model on the testing data. For linear regressions we calculated R-squared and RMSE, along with creating residual plots, in order to see how effectively a linear model fit the data.
+To import and clean our data we used tidyverse/dplyr functions in order to read a csv file as a data frame, rename and transform columns.  
+
+We continued to use this tool set in our exploratory data analysis: creating frequency tables and making summaries of different groups of data. Particularly we used a range of ggplot graph types to create bar charts, histograms, and scatter graphs.
+
+Then we went on to create models using the tidymodels package: creating training and testing data frames, creating recipes, specifying models and combining these to form workflows which we then fitted to the training data to make predictions for the testing data.  
+Following the creation of our models we then analysed their performance. For our logistic models this was done by plotting ROC curves and calculating the area underneath them to assess the fit of the model on the testing data. For linear regressions we calculated R-squared and RMSE, along with creating residual plots, in order to see how effectively a linear model fit the data.
 
 ### Exploratory Data Analysis
 
@@ -99,75 +108,93 @@ We began by creating some frequency tables of our key variables to understand th
 
 ```{r}
 nyweather %>%
-  count(wind_main_dir) %>%
-  arrange(desc(n))
+  count(wind_main_dir) %>% # count frequency of each main direction
+  arrange(desc(n)) # order starting with highest frequency
 
 nyweather %>%
-  count(wind_2nd_dir) %>%
-  arrange(desc(n))
+  count(wind_2nd_dir) %>% # count frequency of each secondary direction
+  arrange(desc(n)) # order starting with highest frequency
 ```
+
 From this we can see that the most common wind directions are a northwest main direction and a west secondary direction, and the least common for both is east. 
 
 We then created some bar charts to see how our key variables changed throughout the year.
 
 ```{r}
 nyweather_separate <- nyweather %>% 
-  separate(day, into = c("Month", "Day"), sep = "-") %>% 
+  separate(day, into = c("month", "day"), sep = "-") %>% # separate the date into month and day
   mutate(
-    Month = as.numeric(Month),
-    Day = as.numeric(Day),
-    Name_Month = factor(month.abb[Month], levels = month.abb)
-  )
+    month = as.numeric(month),
+    day = as.numeric(day),
+    name_month = factor(month.abb[month], levels = month.abb)
+  ) # make these numeric values and create the factor name_month
 
 nyweather_monthly <- nyweather_separate %>% 
-  group_by(Name_Month) %>% 
+  group_by(name_month) %>% # group observations by month
   summarize(monthly_temp_avg = mean(temp_avg),
             monthly_dewp_avg = mean(dewp_avg),
             monthly_wind_chill_avg = mean(wind_chill_avg),
-            monthly_wind_spd_avg = mean(wind_spd_avg))
+            monthly_wind_spd_avg = mean(wind_spd_avg)) # find monthly averages for temperature, dew point, wind chill and wind speed
 
 nyweather_monthly %>% 
-  ggplot(aes(x = Name_Month, y = monthly_temp_avg)) +
-  geom_bar(stat = "identity") +
+  ggplot(aes(x = name_month, y = monthly_temp_avg)) + # set month to x axis and temperature to y axis
+  geom_bar(stat = "identity") + # create bar chart
   labs(title = "Monthly Average Temperature",
-       x="",
-       y= "Temperature in deg C") +
-  theme(axis.text.x = element_text(angle = 45))
+       x = "",
+       y = "Temperature in deg C") + # label graph
+  theme(axis.text.x = element_text(angle = 45)) # tilt x axis text so easier to read
+```
+
+This first graph shows the spread of temperature over the year, which increases over the summer months then decreases in winter as you would expect.
+
+```{r}
 
 nyweather_monthly %>% 
-  ggplot(aes(x = Name_Month, y= monthly_wind_spd_avg)) +
+  ggplot(aes(x = name_month, y= monthly_wind_spd_avg)) +
   geom_bar(stat = "identity") +
   labs(title = "Monthly Average Wind Speed",
-       x="",
-       y= "Wind Speed in Mph") +
+       x = "",
+       y = "Wind Speed in mph") + 
   theme(axis.text.x = element_text(angle = 45))
 
+```
+
+The wind speed chart shows that winds have higher speeds from November to April. This is the same period of lower temperatures, suggesting there may be a correlation between these variables.
+
+```{r}
+
 nyweather_monthly %>% 
-ggplot(aes(x = Name_Month, y= monthly_dewp_avg))+
+  ggplot(aes(x = name_month, y= monthly_dewp_avg)) +
   geom_bar(stat = "identity") +
   labs(title = "Monthly Average Dew Point",
-       x="",
-       y= "Dew Point in deg C")+
+       x = "",
+       y = "Dew Point in deg C") +
   theme(axis.text.x = element_text(angle = 45))
 
+```
+
+The dew point graph has a similar shape to the one for temperature, suggesting there may be a correlation between these variables. From research long periods of a high dew point implies prolonged humidity.
+
+```{r}
+
 nyweather_monthly %>% 
-  ggplot(aes(x = Name_Month, y= monthly_wind_chill_avg)) +
+  ggplot(aes(x = name_month, y= monthly_wind_chill_avg)) +
   geom_bar(stat = "identity") +
   labs(title = "Monthly Average Wind Chill",
-       x="",
-       y= "Wind Chill in deg C") +
+       x = "",
+       y = "Wind Chill in deg C") +
   theme(axis.text.x = element_text(angle = 45))
 ```
+
+The monthly wind chill graph has a similar shape to temperature and dew point, however it has highs of almost 10 degrees more. The temperatures for wind chill are very similar to those for temperature between May and October, suggesting wind chill only affects temperature in the windier and colder months of the year.  
 
 We also created some histograms to get a sense of the spread of our data values.
 
 ```{r}
 
 nyweather %>% 
-  ggplot(aes(wind_vector_dir))+
-  geom_histogram(
-    binwidth = 3
-  )
+  ggplot(aes(wind_vector_dir)) + # set variable to plot
+  geom_histogram(binwidth = 3)  # create histogram and set width of bins to 3
 
 ```
 
@@ -176,91 +203,164 @@ The primary wind vector direction is left skewed, with the majority of values be
 ```{r}
 
 nyweather %>% 
-  ggplot(aes(temp_avg))+
-  geom_histogram(
-    binwidth = 0.7
-  )
+  ggplot(aes(temp_avg)) +
+  geom_histogram(binwidth = 0.7)
 
 nyweather %>% 
-  ggplot(aes(heat_index_avg))+
-  geom_histogram(
-    binwidth = 1
-  )
+  ggplot(aes(heat_index_avg)) +
+  geom_histogram(binwidth = 1)
 
 nyweather %>% 
-  ggplot(aes(wind_chill_avg))+
-  geom_histogram(
-    binwidth = 1
-  )
+  ggplot(aes(wind_chill_avg)) +
+  geom_histogram(binwidth = 1)
 
 ```
 
-These histograms for temperature average, heat index average and wind chill average all have a similar shape, suggesting these variables are correlated which could help to answer our investigation question.  
+These histograms for temperature average, heat index average and wind chill average all have a similar shape, suggesting these variables are correlated which could help to answer our investigation question.   
 
-
-Finally we made some scatterplots to assess correlation between certain variables before constructing our models.
+Finally we made some scatter graphs to assess correlation between certain variables before constructing our models.
 
 ```{r}
 nyweather %>%
-  ggplot(aes(x = cloud_scat_pct, y = dewp_avg)) +
-  geom_point() +
-  labs(title = "Dew Point Avg v Scattered Cloud Percentage")
+  ggplot(aes(x = wind_chill_avg, y = heat_index_avg)) + # set x and y varibles
+  geom_jitter() + # create jitter (scatter) graph
+  labs(title = "Heat Index Average against Wind Chill Average") # label graph
+```
 
+This shows there is a strong linear correlation between heat index mean and wind chill. Since the calculation for heat index does not include wind chill, there must be another factor affecting both.
+
+```{r}
 nyweather %>%
-  ggplot(aes(x = wind_chill_avg, y = heat_index_avg)) +
-  geom_jitter() + 
-  labs(title = "Heat Index Avg V Wind Chill Avg")
+  ggplot(aes(x = wind_spd_avg, y = wind_chill_avg)) +
+  geom_point() + 
+  labs(title = "Wind Chill Average against Wind Speed Average")
+```
 
+We can observe that there is very little correlation between wind speed and wind chill therefore wind speed is likely not the variable causing this relationship between heat index and wind chill.
+
+```{r}
 nyweather %>%
   ggplot(aes(x = wind_chill_avg, y = dewp_avg)) +
   geom_jitter() +
-  labs(title = "Dew Point Avg v Wind Chill Avg")
+  labs(title = "Dew Point Average against Wind Chill Average")
 
+nyweather %>%
+  ggplot(aes(x = heat_index_avg, y = dewp_avg)) +
+  geom_point() +
+  labs(title = "Dew Point Average against Heat Index Average")
 ```
 
+We can observe that there is a strong correlation between dew point and both heat index and wind chill, suggesting that humidity is the reason these two variables are so strongly correlated. This makes sense since increasing humidity will cause the effect of water evaporating on wind chill to be stronger.
+
 ### Linear regression
+
+From the scatter graphs we decided to further investigate the strong correlation between heat index average and wind chill average.
+
 ```{r}
 set.seed(1234)
-nyweather_split2 <- initial_split(nyweather)
-nyweather_train2 <- training(nyweather_split2)
-nyweather_test2  <- testing(nyweather_split2)
+nyweather_split_1 <- initial_split(nyweather) # create initial split
+nyweather_train_1 <- training(nyweather_split_1) # make training dataset
+nyweather_test_1  <- testing(nyweather_split_1) # make testing dataset
 
-wind_heat_mod <- linear_reg() %>%
+wind_heat_mod_1 <- linear_reg() %>%
+  set_engine("lm") # create model
+
+wind_heat_rec_1 <- recipe(
+  wind_chill_avg ~ heat_index_avg,
+  data = nyweather_train_1) # create recipe
+
+wind_heat_wflow_1 <- workflow() %>%
+  add_model(wind_heat_mod_1) %>%
+  add_recipe(wind_heat_rec_1) # add each to a workflow
+
+wind_heat_fit_1 <- wind_heat_wflow_1 %>%
+  fit(data = nyweather_train_1) # fit the training data
+
+tidy(wind_heat_fit_1) # display the regression parameters
+```
+
+We fitted a linear model which had a regression line of $$\hat{windchill} = -4.19 + 1.19 \cdot {heatindex}$$. This shows that for each increase of 1.19 degrees in heat index, the wind chill increases by a degree. If the heat index is 0, then the wind chill is -4.19 degrees.
+
+```{r}
+wind_heat_pred_1 <- predict(wind_heat_fit_1, nyweather_test_1) %>%
+  bind_cols(nyweather_test_1 %>% select(wind_chill_avg, heat_index_avg)) # create predictions table
+
+rsq(wind_heat_pred_1, truth = wind_chill_avg, estimate = .pred) # calculate R-squared
+rmse(wind_heat_pred_1, truth = wind_chill_avg, estimate = .pred) # calculate RMSE
+
+wind_heat_fit_aug_1 <- augment(wind_heat_fit_1, nyweather_train_1) %>%
+  mutate(res_cat = ifelse(.resid > 0, TRUE, FALSE)) # create augmented table of fitted values and actual values
+
+ggplot(wind_heat_fit_aug_1, mapping = aes(x = .pred, y = .resid)) + # create residual plot
+  geom_point(alpha = 0.4) + # set transparency of points to 0.4
+  geom_hline(yintercept = 0, # add reference line
+             color = "blue", # set colour to blue
+             lty = "dashed") + # make line dashed
+  labs(title = "Residual Plot", 
+       x = "Predicted Wind Chill", 
+       y = "Residuals") # label graph
+```
+
+Initially fitting a linear model appeared quite successful, with an R-squared value close to 1. The RMSE value was 0.79 and the range of wind chill was 35.1, therefore the percentage error is approximately 2%.  
+
+However when we plotted the residuals, there was a clear relationship. This indicated that some other variable was impacting this correlation and that a linear model might not be optimal.  
+
+We then considered whether a log transformation would be useful in the issues with residuals however the data was not right skewed as seen in the histogram earlier. 
+
+We decided to create a multivariate linear model to see if that was better at predicting wind chill with less of a pattern in the residuals.
+
+```{r}
+wind_heat_mod_2 <- linear_reg() %>%
   set_engine("lm")
 
-wind_heat_rec <- recipe(
-  wind_chill_avg ~ heat_index_avg,
-  data = nyweather_train2)
+wind_heat_rec_2 <- recipe(
+  wind_chill_avg ~ heat_index_avg + temp_avg + cloud_ovrcst_pct + wind_vector_spd,
+  data = nyweather_train_1
+) %>%
+  step_dummy(all_nominal(), -all_outcomes()) # create dummy variables for all predictor variables and not of outcome variables
 
-wind_heat_wflow <- workflow() %>%
-  add_model(wind_heat_mod) %>%
-  add_recipe(wind_heat_rec)
+wind_heat_wflow_2 <- workflow() %>%
+  add_model(wind_heat_mod_2) %>%
+  add_recipe(wind_heat_rec_2)
 
-wind_heat_fit <- wind_heat_wflow %>%
-  fit(data = nyweather_train2)
+wind_heat_fit_2 <- wind_heat_wflow_2 %>%
+  fit(data = nyweather_train_1)
 
-wind_heat_pred <- predict(wind_heat_fit, nyweather_test2) %>%
-  bind_cols(nyweather_test2 %>% select(wind_chill_avg, heat_index_avg))
+wind_heat_fit_2
+```
+This model also included temperature, percentage of clouds overscattered and the wind speed as a vector. The regression line was $$\hat{windchill} = -4.05 - 1.51 \cdot {heatindex} + 2.73 \cdot {temperature} + 0.0119 \cdot{cloudsoverscattered} - 0.172 \cdot {windvectorspeed}$$. This suggests that for each decrease of -1.51 degrees in heat index, the wind chill increases by 1 degree (the opposite to the first model), similarly for each increase of 2.73 degrees in temperature, for each 0.0119 percent increase in clouds being over scattered, and for each decrease of 0.172 mph decrease in wind speed, the wind chill increases by one degree. When all these coefficients are zero the wind chill is -4.05 degrees.
 
-rsq(wind_heat_pred, truth = wind_chill_avg, estimate = .pred)
-rmse(wind_heat_pred, truth = wind_chill_avg, estimate = .pred)
+```{r}
+wind_heat_pred_2 <- predict(wind_heat_fit_2, nyweather_test_1) %>%
+  bind_cols(nyweather_test_1 %>% 
+              select(wind_chill_avg, 
+                     heat_index_avg, 
+                     temp_avg, 
+                     cloud_ovrcst_pct, 
+                     wind_vector_spd))
 
-wind_heat_fit <- wind_heat_wflow %>%
-  fit(data = nyweather_train2)
-wind_heat_fit_tidy <- tidy(wind_heat_fit) 
-wind_heat_fit_aug <- augment(wind_heat_fit, nyweather_train2) %>%
+rsq(wind_heat_pred_2, truth = wind_chill_avg, estimate = .pred)
+rmse(wind_heat_pred_2, truth = wind_chill_avg, estimate = .pred)
+
+wind_heat_fit_aug_2  <- augment(wind_heat_fit_2, nyweather_train_1) %>%
   mutate(res_cat = ifelse(.resid > 0, TRUE, FALSE))
 
-ggplot(wind_heat_fit_aug, mapping = aes(x = .pred, y = .resid)) +
-  geom_point(alpha = 0.4) + 
+ggplot(wind_heat_fit_aug_2, mapping = aes(x = .pred, y = .resid)) +
+  geom_point(alpha = 0.5) +
   geom_hline(yintercept = 0, 
              color = "blue", 
              lty = "dashed") +
-  labs(title = "Residual Plot", 
+  labs(title = "Residual Plot",
        x = "Predicted Wind Chill", 
        y = "Residuals")
 ```
+
+The R-squared value was slightly closer to one but this doesn't indicate whether the model is better as more variables were added. The RMSE was smaller at only 0.42; however this was already a small percentage of the range and therefore this small difference might not justify the added complexity of the multivariate model (Occam's razor). The plot of the residuals of the multivariate linear model also had a clear pattern so this model didn't resolve the main issue.
+
 ### Logistic regression
+
+Through the histograms and frequency tables of our exploratory data analysis we noticed that wind came most often from the west direction. We decided to investigate this further by creating a logistic model.
+
 ```{r}
 nyweather <- nyweather %>%
   mutate(
@@ -274,75 +374,84 @@ nyweather <- nyweather %>%
   )
 
 set.seed(1234)
-nyweather_split <- initial_split(nyweather)
-nyweather_train <- training(nyweather_split)
-nyweather_test  <- testing(nyweather_split) # Splitting data into training and testing.
+nyweather_split_2 <- initial_split(nyweather)
+nyweather_train_2 <- training(nyweather_split_2)
+nyweather_test_2  <- testing(nyweather_split_2)
 
 wind_dir_rec_1 <- recipe(
   wind_main_west ~ temp_avg,
-  data = nyweather_train)  # Created a recipe.
+  data = nyweather_train_2)
 
 wind_dir_mod_1 <- logistic_reg() %>%
-  set_engine("glm")     # Created a model.
+  set_engine("glm")   
 
 wind_dir_wflow_1 <- workflow() %>%
   add_model(wind_dir_mod_1) %>%
-  add_recipe(wind_dir_rec_1) #Added them to a work flow.
+  add_recipe(wind_dir_rec_1)
 
 wind_dir_fit_1 <- wind_dir_wflow_1 %>%
-  fit(data = nyweather_train)  # Applying work flow to training data.
+  fit(data = nyweather_train_2)
 
 tidy(wind_dir_fit_1)
+```
 
-wind_dir_pred_1 <- predict(wind_dir_fit_1, nyweather_test, type = "prob") %>%
-  bind_cols(nyweather_test) 
+Our first model used the average temperature variable to predict whether the wind direction was in the west direction or not. We found that as the average temperature increases, the logic of the probability decreases, and therefore the probability that the wind will be in the west direction decreases. This makes sense as it would be coming over the Atlantic ocean.  
 
-wind_dir_pred_1
+```{r}
+wind_dir_pred_1 <- predict(wind_dir_fit_1, nyweather_test_2, type = "prob") %>%
+  bind_cols(nyweather_test_2) 
 
 wind_dir_pred_1 %>%
   roc_curve(
     truth = wind_main_west,
     .pred_yes,             
     event_level = "second") %>%
-  autoplot() # Plotting a ROC curve
+  autoplot() # plot ROC curve
 
 wind_dir_pred_1 %>%
   roc_auc(
     truth = wind_main_west,
     .pred_yes,             
     event_level = "second"
-  ) 
+  ) # find area under the curve
+```
 
+The ROC area is 0.83 which is somewhat close to one suggesting that the model is relatively good at predicting whether the wind is in the west direction or not.  
+
+We decided to try adding variables to this logistic model to see if we could improve it. 
+
+```{r}
 wind_dir_rec_2 <- recipe(
   wind_main_west ~ temp_avg + heat_index_avg + wind_chill_avg,
-  data = nyweather_train  # Created a recipe.
-)
-wind_dir_rec_2 <- wind_dir_rec_2 %>%
+  data = nyweather_train_2 
+  ) %>%
   step_dummy(all_nominal(), -all_outcomes()) 
-# Created dummy variables for all predictor variables and not of outcome variables.
-
+  
 wind_dir_mod_2 <- logistic_reg() %>%
-  set_engine("glm")     # Created a model.
+  set_engine("glm") 
 
 wind_dir_wflow_2 <- workflow() %>%
   add_model(wind_dir_mod_2) %>%
-  add_recipe(wind_dir_rec_2) #Added them to a work flow.
+  add_recipe(wind_dir_rec_2)
 
 wind_dir_fit_2 <- wind_dir_wflow_2 %>%
-  fit(data = nyweather_train)  # Applying work flow to training data.
+  fit(data = nyweather_train_2)
 
 tidy(wind_dir_fit_2) 
+```
 
-wind_dir_pred_2 <- predict(wind_dir_fit_2, nyweather_test, type = "prob") %>% 
-  bind_cols(nyweather_test) 
-wind_dir_pred_2 # Using fitted model to predict the testing data.
+The interpretation of this model is slightly more complex, interestingly by adding variables, on average the mean temperature has the opposite effect on the probability of the wind direction being west.
+
+```{r}
+wind_dir_pred_2 <- predict(wind_dir_fit_2, nyweather_test_2, type = "prob") %>% 
+  bind_cols(nyweather_test_2) 
 
 wind_dir_pred_2 %>%
   roc_curve(
     truth = wind_main_west,
     .pred_yes,             
     event_level = "second") %>%
-  autoplot() # Plotting a ROC curve
+  autoplot()
 
 wind_dir_pred_2 %>%
   roc_auc(
@@ -350,26 +459,28 @@ wind_dir_pred_2 %>%
     .pred_yes,             
     event_level = "second") 
 ```
+
+The ROC area is slightly closer to one at 0.85 but not by much. Again like the linear model it might be that the slightly better performance of the multivariate model might not be favourable over the much simpler model. 
+
 ### Answering our question
 
-Investigating the relationships between wind and other weather variables has been a success as we have worked through key variables in the data set analysing as we went. Through this process we found variables that we could create models with and find relationships. We have established there is a clear relationship between westerly winds and cooler temperatures, upon further research this is due to winds coming from cold dry air in the west. 
+Investigating the relationships between wind and other weather variables has been a success, we found relationships and created models. We have established there is a clear relationship between winds from the west and cooler temperatures.
 
-Additionally while we did not find an appropriate model for the relationship between heat index and wind chill it was clear that a relationship did exist.
+Although we did not find an appropriate model for the relationship between heat index and wind chill it was clear that there is a positive correlation between the two.
 
 ### Evaluation
 
 WWW  
-- We made clear and informative data visualisations, carried out several regressions and analysed the efficacy of these models.  
-- We worked well as a team, splitting up the work equally and making sure that people were doing code/analysis techniques that they felt confident in. During workshops we also carried out pair programming techniques to reduce merger errors. When these did occur they were successfully resolved.  
-- We coded clearly, using clear variable names and adding lots of comments to our code to explain what we were doing. We also worked in different R code chunks of the investigation.rmd document to clearly show the different sections of data analysis and also to reduce merger errors.  
-- We clearly documented the progress of our project using a shared google document, recording notes of what we discussed at workshops and group meetings, making a note of our progress through the project criteria and recording sources we used.  
+- We worked well as a team, splitting up the work equally and making sure that people were doing analysis techniques that they felt confident in. During workshops we also carried out pair programming techniques to reduce merger errors.  
+- We coded clearly, using clear variable names and adding lots of comments to our code to explain what we were doing. We also worked in different R code chunks of the investigation.rmd document to clearly show the different sections of data analysis.
+- We clearly documented the progress of our project using a shared google document.
 
 EBI  
-- We could have looked into different cloud scatter patterns as part of our investigation and how these were affected by wind, and perhaps also looked into dew points more deeply.  
-- We could have carried out cross validation to estimate how well the model would have worked in practice.  
-- We could have extended our inferences from our modelling by using bootstrapping and constructing a confidence interval for predicting some sort of wind variable.  
-- We could have added precipitation records from this time period to our data and analysed any correlation between this and wind (if we could have found different kinds of precipitation, for example distinguishing snow/rain/hail, this would have acted as an interesting categorical variable).
+- We could have looked into different cloud scatter patterns as part of our investigation and how these were affected by wind. 
+- We could have carried out cross validation to estimate how well the model would have worked in practice, and then extended our inferences from our modelling by using bootstrapping and constructing a confidence interval.  
+- We could have added precipitation records from this time period to our data and analysed any correlation between this and wind.
 
+Word count: 1618
 
 ## References
 
